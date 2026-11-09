@@ -780,7 +780,7 @@
   function stationInfo(g, S, key, t) {
     const st = A.ROOM.stations[key];
     const cx = A.ROOM.screenX(st.angle, S.yaw);
-    const near = Math.abs(wrap(st.angle - S.yaw)) < 0.62;
+    const near = Math.abs(wrap(st.angle - S.yaw)) < 0.45;
     const job = S.job;
     if (!job || job.done || job.locked) return;
     const isPack = key === 'pack';

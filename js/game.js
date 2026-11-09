@@ -563,7 +563,7 @@ function shuffle(a) {
       const stationKey = job.step === 'print' ? (job.printer || 'print1') : 'pack';
       const st = ART.ROOM.stations[stationKey];
       const isPrint = stationKey === 'print1' || stationKey === 'print2' || stationKey === 'print3';
-      const range = isPrint ? 0.45 : 0.66;
+      const range = isPrint ? 0.28 : 0.40;
       if (st) {
         const d = Math.abs(wrap(st.angle - S.yaw));
         if (d < range) workDist = d;
@@ -576,7 +576,7 @@ function shuffle(a) {
       if (!d.char || d.leaving) return;
       const ang = side === 'F' ? 0 : Math.PI;
       const dd = Math.abs(wrap(ang - S.yaw));
-      if (dd < 0.72 && dd < doorDist) doorDist = dd;
+      if (dd < 0.42 && dd < doorDist) doorDist = dd;
     });
     if (doorDist === Infinity) return workDist < Infinity ? 'work' : null;
     if (workDist < Infinity) return workDist <= doorDist ? 'work' : 'door';
@@ -588,7 +588,7 @@ function shuffle(a) {
     const st = ART.ROOM.stations[key];
     if (!st) return false;
     const isPrint = key === 'print1' || key === 'print2' || key === 'print3';
-    return Math.abs(wrap(st.angle - S.yaw)) < (isPrint ? 0.45 : 0.66);
+    return Math.abs(wrap(st.angle - S.yaw)) < (isPrint ? 0.28 : 0.40);
   }
 
   function usageNow() {
@@ -846,7 +846,7 @@ function shuffle(a) {
     if (d.leaving) return; // já está de saída; quem controla a saída é a animação de recuo
     d.wait += dt;
     const angle = side === 'F' ? 0 : Math.PI;
-    const watching = Math.abs(wrap(angle - S.yaw)) < 0.72;
+    const watching = Math.abs(wrap(angle - S.yaw)) < 0.42;
     const attending = watching && S.holdE && eTarget() === 'door';
     if (d.atten == null) d.atten = 0;
     if (attending) {
@@ -1347,7 +1347,7 @@ function shuffle(a) {
       const d = S.doors[s];
       if (!d.char || d.leaving) return;
       const angle = s === 'F' ? 0 : Math.PI;
-      if (Math.abs(wrap(angle - S.yaw)) < 0.72) { side = s; fid = d.char; }
+      if (Math.abs(wrap(angle - S.yaw)) < 0.42) { side = s; fid = d.char; }
     });
     if (!side || S.jumping || S.viewMode === 'camera') {
       el.classList.add('hidden');
