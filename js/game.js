@@ -14,7 +14,7 @@ const GAME = (function () {
   const VW = ART.VW, VH = ART.VH;
   const HOUR = 50;                 // segundos por hora
   const NIGHT_LEN = HOUR * 6;
-  const DRAIN = 1 / 9.6;           // % de bateria por segundo com uso 1
+  const DRAIN = 1 / 6.2;            // % de bateria por segundo com uso 1 (bateria bem mais limitada)
   const TAU = Math.PI * 2;
   const wrap = a => ART.ROOM.wrap(a);
   const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -62,6 +62,18 @@ const FRIEND_LINES = {
   hori: ['Jairo, é o Hori.', 'Estou a caminho. Me espera.'],
   re: ['Fala, Jairo. É a Re.', 'Vou aparecer aí. Não fecha a porta na minha cara.']
 };
+/* falas de balão durante a atenção (por enquanto os balões ficam VAZIOS — só aparece o balão) */
+const FRIEND_SPEECH = {
+  akira: [],
+  leo: [],
+  hori: [],
+  re: []
+};
+function pickSpeechLine(id) {
+  const lines = FRIEND_SPEECH[id] || [];
+  if (!lines.length) return '';
+  return lines[(Math.random() * lines.length) | 0];
+}
 
 /* elenco por noite: 1 = Hori+Akira · 2 = +Re · 3+ = todos, ordem aleatória */
 function nightCast(night, levels) {
@@ -82,16 +94,16 @@ function shuffle(a) {
   /* pedidos — cada produto tem tempo próprio de impressão e embalagem
      (jobs maiores demoram mais nas duas etapas); a noite multiplica os tempos */
   const ORDERS = [
-    { n: 'Cartões de visita', print: 14.0, pack: 3.1 },
-    { n: 'Panfletos do mercado', print: 16.0, pack: 3.4 },
-    { n: 'Etiquetas do estoque', print: 16.0, pack: 3.3 },
-    { n: 'Bloquinhos da farmácia', print: 16.0, pack: 3.5 },
-    { n: 'Talões de nota', print: 18.0, pack: 3.8 },
-    { n: 'Cardápio da lanchonete', print: 18.0, pack: 4.0 },
-    { n: 'Menus do restaurante', print: 20.0, pack: 4.1 },
-    { n: 'Cartazes do show', print: 21.0, pack: 4.4 },
-    { n: 'Convites de casamento', print: 22.0, pack: 4.8 },
-    { n: 'Revista da escola', print: 24.0, pack: 5.4 }
+    { n: 'Cartões de visita', print: 17, pack: 3.7 },
+    { n: 'Panfletos do mercado', print: 19, pack: 4.1 },
+    { n: 'Etiquetas do estoque', print: 19, pack: 4.0 },
+    { n: 'Bloquinhos da farmácia', print: 19, pack: 4.2 },
+    { n: 'Talões de nota', print: 22, pack: 4.6 },
+    { n: 'Cardápio da lanchonete', print: 22, pack: 4.8 },
+    { n: 'Menus do restaurante', print: 24, pack: 4.9 },
+    { n: 'Cartazes do show', print: 25, pack: 5.3 },
+    { n: 'Convites de casamento', print: 26, pack: 5.8 },
+    { n: 'Revista da escola', print: 29, pack: 6.5 }
   ];
   // dificuldade da noite multiplica os tempos (noites avançadas pedem mais do trabalhador)
   function nightJobMult(night, levels) {
@@ -99,7 +111,7 @@ function shuffle(a) {
       const avg = ['hori', 'akira', 'leo', 're'].reduce((a, k) => a + (((levels || {})[k]) | 0), 0) / 4;
       return 1 + (avg / 20) * 0.45;             // personalizada: 1.0 … 1.45 (trabalho mais pesado com amigos mais agressivos)
     }
-    return 1 + ((night | 0) - 1) * 0.045;      // campanha: 1.0 … 1.225 (mais pesado a cada noite, mas vencível)
+    return 1 + ((night | 0) - 1) * 0.07;       // campanha: 1.0 … 1.35 (as últimas noites pesam de verdade)
   }
 
   /* ---------------- ligações do pai ---------------- */
@@ -187,7 +199,7 @@ function shuffle(a) {
   }
 
   function newDoor() {
-    return { closed: false, closedAmt: 0, light: false, char: null, wait: 0, atten: 0, attenNeed: 1.6, enterT: 0, leaving: false };
+    return { closed: false, closedAmt: 0, light: false, char: null, wait: 0, atten: 0, attenNeed: 1.6, enterT: 0, leaving: false, bubbleT: 0, bubbleText: '', bubbleSide: 1, bubbleLift: 1 };
   }
 
   function newState(night, levels) {
@@ -240,6 +252,7 @@ function shuffle(a) {
       jumping: null,
       shake: 0,
       ended: false,
+      objectiveShown: false,
       phone: null,
       ambient: 7 + Math.random() * 8,
       ordersDone: 0,
@@ -395,6 +408,28 @@ function shuffle(a) {
     if (p.t >= p.dur) advancePhone();
   }
 
+  /* tempo entre a ligação e a chegada do amigo — diminui conforme a noite avança (e conforme o nível, na personalizada) */
+  function arrivalGapFor(id) {
+    const night = S.night | 0;
+    if (night >= 7) return Math.max(6, 19 - customDiff(id) * 10);   // nível 20 → ~9s
+    return Math.max(7, 19 - (night - 1) * 2.2);                      // noite 1: ~19s … noite 6: ~8s
+  }
+
+  /* agenda as chegadas dos amigos (primeira ligação só após um respiro variável após o pai) —
+     o turno SEMPRE se concretiza, mesmo que o celular morra no meio */
+  function scheduleFriendArrivals() {
+    if (!S || !S.callSchedule || !S.callSchedule.length) return;
+    const base = S.t;
+    const firstGap = 26 + Math.random() * 18;
+    S.callSchedule.forEach((c, idx) => {
+      if (!S.friendCallNotified[c.id]) {
+        // o turno SEMPRE se concretiza: as chegadas são espalhadas e cabem antes das 6 AM
+        c.at = Math.min(base + firstGap + idx * (46 + Math.random() * 16), NIGHT_LEN - 55);
+        S.arrivals[c.id] = Math.min(c.at + arrivalGapFor(c.id) + Math.random() * 4, NIGHT_LEN - 12);
+      }
+    });
+  }
+
   function endPhone() {
     if (!S) return;
     S.phone = null;
@@ -402,21 +437,13 @@ function shuffle(a) {
     AUDIO.phoneStatic(false);
     AUDIO.phoneEnd(); // sininho de despedida
     // primeira ligação de amigo só após um respiro variável após o pai
-    if (S.callSchedule && S.callSchedule.length) {
-      const base = S.t;
-      const firstGap = 26 + Math.random() * 18;
-      S.callSchedule.forEach((c, idx) => {
-        if (!S.friendCallNotified[c.id]) {
-          c.at = base + firstGap + idx * (52 + Math.random() * 18);
-          S.arrivals[c.id] = c.at + 18 + Math.random() * 8;
-        }
-      });
-    }
+    scheduleFriendArrivals();
     showObjective();
   }
 
   function showObjective() {
     if (!S) return;
+    S.objectiveShown = true;
     const el = $('objective');
     if (!el) return;
     const txt = 'OBJETIVO: imprimir e embalar ' + S.quota + ' pedidos antes das 6 AM';
@@ -499,7 +526,37 @@ function shuffle(a) {
     }
   }
 
-  /* ---------------- controles ---------------- */
+  /* o que E esta controlando neste frame: trabalho ou atenção de porta — o MAIS centralizado vence.
+     Não dá para trabalhar e encarar um amigo ao mesmo tempo */
+  function eTarget() {
+    if (!S || !S.holdE) return null;
+    // trabalho (se a estação necessária está ao alcance)
+    const job = S.job;
+    let workDist = Infinity;
+    if (job && !job.locked && !job.done && !S.jumping && !S.ended) {
+      const stationKey = job.step === 'print' ? (job.printer || 'print1') : 'pack';
+      const st = ART.ROOM.stations[stationKey];
+      const isPrint = stationKey === 'print1' || stationKey === 'print2' || stationKey === 'print3';
+      const range = isPrint ? 0.45 : 0.66;
+      if (st) {
+        const d = Math.abs(wrap(st.angle - S.yaw));
+        if (d < range) workDist = d;
+      }
+    }
+    // atenção em porta (se há amigo e porta centralizada)
+    let doorDist = Infinity;
+    ['F', 'B'].forEach(side => {
+      const d = S.doors[side];
+      if (!d.char || d.leaving) return;
+      const ang = side === 'F' ? 0 : Math.PI;
+      const dd = Math.abs(wrap(ang - S.yaw));
+      if (dd < 0.72 && dd < doorDist) doorDist = dd;
+    });
+    if (doorDist === Infinity) return workDist < Infinity ? 'work' : null;
+    if (workDist < Infinity) return workDist <= doorDist ? 'work' : 'door';
+    return 'door';
+  }
+
   function nearStation(key) {
     if (!S) return false;
     const st = ART.ROOM.stations[key];
@@ -574,7 +631,7 @@ function shuffle(a) {
 
   /* ---------------- IA ---------------- */
   function castHas(id) { return S.cast && S.cast.indexOf(id) !== -1; }
-  function aiSpeed(night) { return Math.min(1.5, 1 + (night - 1) * 0.22); }
+  function aiSpeed(night) { return Math.min(1.8, 1 + (night - 1) * 0.33); }
   /* dificuldade individual (0..1) — usada na noite personalizada (níveis do menu) */
   function customDiff(id) {
     if (!S || (S.night | 0) < 7) return 0;
@@ -590,12 +647,12 @@ function shuffle(a) {
       const d = customDiff(id);
       return Math.max(4.4, 9.5 - d * 4.3);      // nível 0 → 9.5s · nível 20 → 5.2s
     }
-    return Math.max(5.6, 9.5 - (night - 1) * 1.0);
+    return Math.max(3.6, 9.5 - (night - 1) * 1.3);   // Noite 6: ~3s → 3.6s — as portas ficam realmente perigosas
   }
-  function attenTime(night) { return 1.4 + (night - 1) * 0.4; }
+  function attenTime(night) { return 1.5 + (night - 1) * 0.55; }
   function attenDecay(night, id) {
     if ((night | 0) >= 7 && id) return 1.15 + customDiff(id) * 2.35;  // nível 0 → 1.15 · nível 20 → 3.5
-    return 1.2 + (night - 1) * 0.35;
+    return 1.25 + (night - 1) * 0.5;                    // atenção decai bem mais rápido nas noites avançadas
   }
 
   function setCamPos(id, room) {
@@ -706,7 +763,8 @@ function shuffle(a) {
     const target = ch.targetDoor;
     let next = null;
     const path = (pos == null) ? null : bfsPath(pos, target);
-    if (path && path.length && Math.random() < 0.55) next = path[0];
+    const pathFollow = Math.min(0.78, 0.55 + ((S.night | 0) - 1) * 0.045); // nas noites avançadas, amigos seguem o caminho direto às portas com mais frequência
+    if (path && path.length && Math.random() < pathFollow) next = path[0];
     else {
       const nb = ROOM_GRAPH[pos] || [];
       if (nb.length) next = nb[(Math.random() * nb.length) | 0];
@@ -763,10 +821,21 @@ function shuffle(a) {
     d.wait += dt;
     const angle = side === 'F' ? 0 : Math.PI;
     const watching = Math.abs(wrap(angle - S.yaw)) < 0.72;
-    const attending = watching && S.holdE;
+    const attending = watching && S.holdE && eTarget() === 'door';
     if (d.atten == null) d.atten = 0;
-    if (attending) d.atten = Math.min(1, d.atten + dt / (d.attenNeed || attenTime(S.night)));
-    else d.atten = Math.max(0, d.atten - dt * attenDecay(S.night, id));
+    if (attending) {
+      d.atten = Math.min(1, d.atten + dt / (d.attenNeed || attenTime(S.night)));
+      // balão de fala: chance aleatória enquanto você encara o amigo (texto fica vazio por enquanto)
+      if (d.bubbleT <= 0 && Math.random() < dt * 0.30) {
+        d.bubbleT = 2.6;
+        d.bubbleText = pickSpeechLine(id);
+        d.bubbleSide = Math.random() < 0.5 ? -1 : 1;    // lado varia a cada balão
+        d.bubbleLift = 0.85 + Math.random() * 0.4;      // disposição vertical varia também
+        AUDIO.phoneBlip(1);
+      }
+    } else {
+      d.atten = Math.max(0, d.atten - dt * attenDecay(S.night, id));
+    }
     // proximidade avança apenas quando NÃO está dando atenção — leve progresso do susto
     if (!attending) d.prox = Math.min(1, (d.prox || 0) + dt / (doorPatience(S.night, id) * 0.7));
     if (d.atten >= 1) { retreat(id, side); return; }
@@ -803,16 +872,23 @@ function shuffle(a) {
   }
 
   /* ---------------- bateria do celular / tempo ---------------- */
-  /* o celular morre: SOMENTE as ligações e os avisos/chegadas de amigos param;
-     a gráfica continua funcionando normalmente (luzes, portas, impressoras, trabalho) */
+  /* o celular morre: SOMENTE as ligações, os avisos e o aviso de meta param —
+     a gráfica continua funcionando (luzes, portas, impressoras, trabalho) e o TURNO SE COMPLETA:
+     se o celular morrer durante a ligação do pai, as chegadas são agendadas assim mesmo e o trabalho libera */
   function phoneOut() {
     if (!S || S.out.active) return;
     S.out.active = true;
     AUDIO.ring(false);
     const ab = $('answerBtn'); if (ab) ab.classList.add('hidden');
     // ligações em andamento caem na hora
+    const hadPhoneCall = !!S.phone;
     if (S.phone) { S.phone = null; $('subtitle').classList.add('hidden'); AUDIO.phoneStatic(false); }
     if (S.friendCall) { S.friendCall = null; $('subtitle').classList.add('hidden'); AUDIO.phoneStatic(false); }
+    // o pai caiu — mas o turno ainda acontece: agenda chegadas e libera o trabalho
+    if (hadPhoneCall && !S.objectiveShown) {
+      scheduleFriendArrivals();
+      showObjective();
+    }
     AUDIO.powerDown();
     toast('Bateria do celular acabou. Sem ligações nem avisos.');
   }
@@ -875,8 +951,7 @@ function shuffle(a) {
       return;
     }
 
-    const stationKey = job.step === 'print' ? (job.printer || 'print1') : 'pack';
-    const working = !!S.holdE && nearStation(stationKey);
+    const working = eTarget() === 'work';
     job.working = working;
 
     if (!working) {
@@ -1170,6 +1245,8 @@ function shuffle(a) {
           d.char = null; d.wait = 0; d.atten = 0; d.prox = 0; d.leaving = false;
         }
       }
+      // tempo de vida do balão de fala
+      if (d.bubbleT > 0) d.bubbleT = Math.max(0, d.bubbleT - dt);
     });
 
     updateJob(dt);

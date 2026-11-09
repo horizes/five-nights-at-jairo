@@ -662,6 +662,52 @@
         g.fillStyle = 'rgba(2,3,4,' + ((1 - ease) * 0.8).toFixed(3) + ')';
         g.fillRect(x, y, w, h + 100);
       }
+
+      // balão de fala (aparece aleatoriamente enquanto você encara o amigo)
+      if (st.bubbleT > 0 && charVisible) {
+        const BUBBLE = 2.6;
+        const tIn = Math.min(1, (BUBBLE - st.bubbleT) / 0.18);
+        const tOut = Math.min(1, st.bubbleT / 0.35);
+        const alpha = Math.max(0, Math.min(tIn, tOut));
+        const text = st.bubbleText || '';
+        const side = st.bubbleSide === -1 ? -1 : 1;               // lado varia a cada balão
+        const lift = st.bubbleLift == null ? 1 : st.bubbleLift;   // altura varia a cada balão
+        g.save();
+        g.globalAlpha = alpha;
+        g.font = 'bold 17px "Courier New", monospace';
+        const textW = text ? g.measureText(text).width : 0;
+        const bw = Math.max(230, textW + 76);
+        const bh = 64;
+        const R = 30;                                              // bem arredondado
+        const headX = cx + sway;
+        const headTop = by - 285 * sc;
+        const off = bw / 2 + 34;
+        let bx = headX + side * off;                               // lateralizado (um lado ou outro)
+        // não deixa o balão sair da tela
+        bx = A.clamp(bx, bw / 2 + 12, VW - bw / 2 - 12);
+        const byBottom = headTop - 8 - (lift - 0.9) * 110;         // disposição/altura também varia
+        const by0 = byBottom - bh;
+        const bx0 = bx - bw / 2;
+        // balão
+        g.fillStyle = 'rgba(240,242,236,.95)';
+        A.rr(g, bx0, by0, bw, bh, R); g.fill();
+        g.strokeStyle = 'rgba(10,10,12,.85)'; g.lineWidth = 3.5;
+        A.rr(g, bx0, by0, bw, bh, R); g.stroke();
+        // rabicho — do lado do amigo, apontando para a cabeça dele
+        const tailX = side === 1 ? bx0 + 18 : bx0 + bw - 18;       // canto interno inferior do balão
+        g.fillStyle = 'rgba(240,242,236,.95)';
+        A.poly(g, [[tailX - 13, byBottom - 6], [tailX + 13, byBottom - 6], [headX + side * 6, byBottom + 26]]); g.fill();
+        g.strokeStyle = 'rgba(10,10,12,.85)'; g.lineWidth = 3.5;
+        g.beginPath(); g.moveTo(tailX - 13, byBottom - 6); g.lineTo(headX + side * 6, byBottom + 26); g.lineTo(tailX + 13, byBottom - 6); g.stroke();
+        // texto (por enquanto os balões ficam vazios)
+        if (text) {
+          g.fillStyle = '#161616';
+          g.textAlign = 'center';
+          g.textBaseline = 'middle';
+          g.fillText(text, bx, by0 + bh / 2 + 1);
+        }
+        g.restore();
+      }
     }
     // folha da porta
     const p = A.clamp(st.closedAmt == null ? (st.closed ? 1 : 0) : st.closedAmt, 0, 1);
