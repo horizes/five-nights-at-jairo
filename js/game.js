@@ -14,7 +14,15 @@ const GAME = (function () {
   const VW = ART.VW, VH = ART.VH;
   const HOUR = 50;                 // segundos por hora
   const NIGHT_LEN = HOUR * 6;
-  const DRAIN = 1 / 3.8;            // % de bateria por segundo com uso 1 (bateria bem mais curta)
+  /* bateria "viciada": gasta bem mais a cada noite (interpolar por dificuldade) */
+  function drainRate() {
+    const night = S ? (S.night | 0) : 1;
+    if (night >= 7) {
+      const avg = ['hori', 'akira', 'leo', 're'].reduce((a, k) => a + ((((S.levels || {})[k]) | 0)), 0) / 80; // 0..1
+      return 1 / (7 - avg * 3.5);                    // personalizada: até 1/3.5
+    }
+    return 1 / Math.max(3.4, 8 - (night - 1) * 0.9);   // noite 1: 1/8 · noite 2: 1/7.1 · noite 3: 1/6.2 · noite 4: 1/5.3 · noite 5: 1/4.4 · noite 6: 1/3.5
+  }
   const TAU = Math.PI * 2;
   const wrap = a => ART.ROOM.wrap(a);
   const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -134,6 +142,7 @@ function shuffle(a) {
     3: [
       'Alô. Tudo bem por aí?',
       'Olha, hoje são {q} pedidos. O cliente gosta do seu trabalho.',
+      'Tome cuidado, Jairinho: a bateria do seu celular está ficando viciada. Gasta cada vez mais rápido.',
       'Qualquer dúvida é só me ligar. Boa noite, filho.'
     ],
     4: [
@@ -145,6 +154,7 @@ function shuffle(a) {
     5: [
       'Alô, filho. Como está?',
       'Olha, amanhã é a última entrega do contrato. São {q} pedidos.',
+      'Jairinho, preste atenção: a bateria do seu celular VICIOU de vez. Economize bateria esta noite.',
       'Se sair tudo certo, a gráfica renova com a gente.',
       'Você faz um trabalho impecável. Orgulho de você. Boa noite!'
     ],
@@ -274,7 +284,7 @@ function shuffle(a) {
     const ct = $('camToggle');
     if (ct) ct.classList.toggle('hidden', !keepUI);
     const cbx = $('camBox');
-    if (cbx && !camMapAnim) cbx.classList.toggle('show', keepUI && !!S && S.viewMode === 'camera');
+    if (cbx && !camMapAnim) cbx.classList.toggle('show', keepUI && !!S && S.viewMode === 'camera' && !S.out.active);
     if (name !== 'play' && name !== 'pause') {
       $('subtitle').classList.add('hidden');
       const da = $('doorAtten'); if (da) da.classList.add('hidden');
@@ -648,7 +658,7 @@ function shuffle(a) {
       const d = customDiff(id);
       return Math.max(4.4, 9.5 - d * 4.3);      // nível 0 → 9.5s · nível 20 → 5.2s
     }
-    return Math.max(3.6, 9.5 - (night - 1) * 1.3);   // Noite 6: ~3s → 3.6s — as portas ficam realmente perigosas
+    return Math.max(3.3, 9.5 - (night - 1) * 1.4);   // respira: 2→8.1 · 3→6.7 · 4→5.3 · 5→3.9 · 6→3.3 — noites finais muito mais perigosas
   }
   function attenTime(night) { return 1.5 + (night - 1) * 0.55; }
   function attenDecay(night, id) {
@@ -1256,7 +1266,7 @@ function shuffle(a) {
     if (S.t >= NIGHT_LEN) { endOfNight(); return; }
 
     // bateria do CELULAR: só mata as ligações/avisos; a gráfica (trabalho e amigos) continua normal
-    S.power -= dt * DRAIN * usageNow();
+    S.power -= dt * drainRate() * usageNow();
     if (S.power <= 0) {
       S.power = 0;
       phoneOut();
@@ -1290,7 +1300,7 @@ function shuffle(a) {
 
     // mostra/esconde mapa de câmeras + destaca câmera ativa
     const cb = $('camBox');
-    if (cb && !camMapAnim) cb.classList.toggle('show', !!(S && S.viewMode === 'camera'));
+    if (cb && !camMapAnim) cb.classList.toggle('show', !!(S && S.viewMode === 'camera' && !S.out.active));
     const tog = $('camToggle');
     if (tog) tog.classList.toggle('hidden', !(screen === 'play'));
     document.querySelectorAll('.camRoom').forEach(b => {
@@ -1423,7 +1433,7 @@ function shuffle(a) {
     ctx.fillRect(0, 0, VW, VH);
     // sincroniza visibilidade do mapa de câmeras
     const cb = $('camBox');
-    if (cb && S && !camMapAnim) cb.classList.toggle('show', S.viewMode === 'camera');
+    if (cb && S && !camMapAnim) cb.classList.toggle('show', S.viewMode === 'camera' && !S.out.active);
 
     if (!S || screen === 'title' || screen === 'custom' || (screen === 'help' && !S)) {
       ART.drawTitle(ctx, rt);
@@ -1614,7 +1624,7 @@ function shuffle(a) {
         b.classList.toggle('active', !!(S && S.viewMode === 'camera' && String(S.activeCamera) === b.dataset.cam));
       });
       const cb = $('camBox');
-      if (cb && !camMapAnim) cb.classList.toggle('show', !!(S && S.viewMode === 'camera'));
+      if (cb && !camMapAnim) cb.classList.toggle('show', !!(S && S.viewMode === 'camera' && !S.out.active));
     }
     function playCamWipe(opening) {
       camAnim = true;

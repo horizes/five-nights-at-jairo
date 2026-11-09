@@ -1046,6 +1046,27 @@
   A.drawCamera = function (g, S, room, t) {
     g.fillStyle = '#000';
     g.fillRect(0, 0, VW, VH);
+    // celular sem bateria: a tela das câmeras vira pura escuridão com o símbolo de bateria morta
+    if (S && S.out && S.out.active) {
+      const cx = VW / 2, cy = VH / 2 - 30;
+      // faixa de aviso sutil no topo e rodapé
+      g.fillStyle = 'rgba(255,60,50,.08)';
+      g.fillRect(0, 0, VW, 10); g.fillRect(0, VH - 10, VW, 10);
+      // corpo da bateria
+      const bw = 300, bh = 150, r = 26;
+      g.strokeStyle = 'rgba(232,236,240,.85)'; g.lineWidth = 14;
+      A.rr(g, cx - bw / 2, cy - bh / 2, bw, bh, r); g.stroke();
+      // terminal (tampa) da bateria
+      g.fillStyle = 'rgba(232,236,240,.85)';
+      A.rr(g, cx + bw / 2 + 4, cy - 34, 34, 68, 8); g.fill();
+      // símbolo de desligado (risco vermelho)
+      g.strokeStyle = '#ff3b30'; g.lineWidth = 20; g.lineCap = 'round';
+      g.beginPath(); g.moveTo(cx - 74, cy - 74); g.lineTo(cx + 74, cy + 74); g.stroke();
+      // texto
+      A.text(g, 'SEM BATERIA', cx, cy + 210, { font: 'bold 44px "Courier New", monospace', color: 'rgba(240,244,248,.92)', spacing: 10, align: 'center', baseline: 'middle' });
+      A.text(g, 'o celular morreu — câmeras offline', cx, cy + 268, { font: '17px "Courier New", monospace', color: 'rgba(160,175,185,.6)', spacing: 3, align: 'center', baseline: 'middle' });
+      return;
+    }
     const roomNames = ['GALPÃO DE ENTRADA', 'RECEBIMENTO', 'ADMINISTRATIVO', 'ALMOXARIFADO', 'PRODUÇÃO', 'COZINHA', 'ACABAMENTO E CORTE', 'CORREDOR DA FRENTE', 'CORREDOR DE TRÁS'];
     // perspectiva como na sala principal: teto, parede com painéis e piso em perspectiva
     g.fillStyle = '#040607'; g.fillRect(0, 0, VW, 150);
