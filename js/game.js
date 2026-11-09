@@ -66,7 +66,7 @@ const FRIEND_LINES = {
 const FRIEND_SPEECH = {
   akira: ['Eu como minha própria bosta'],
   leo: ['Robert Plant'],
-  hori: ['Vey'],
+  hori: ['Oh vey'],
   re: ['Me vê um copão aí']
 };
 function pickSpeechLine(id) {
