@@ -161,12 +161,9 @@ html,body{
 #doorAtten{position:absolute;left:50%;bottom:calc(var(--u)*205);transform:translateX(-50%);z-index:9;text-align:center;pointer-events:none;transition:bottom .25s ease}
 /* sobe da zona de sobreposição quando há ligação/telefone na tela */
 #doorAtten.phoneOffset{bottom:calc(var(--u)*320)}
-#daName{font-family:"Courier New",monospace;font-size:calc(var(--u)*17);letter-spacing:.2em;color:#ffd9a0;text-shadow:0 0 calc(var(--u)*12) rgba(255,180,60,.55)}
-#daHint{font-size:calc(var(--u)*14);letter-spacing:.12em;color:#a8b7c0;margin-top:calc(var(--u)*2);max-width:calc(var(--u)*460);white-space:normal;line-height:1.5;margin-left:auto;margin-right:auto}
-#daHint b{color:#ffd479}
+#daHint{font-size:calc(var(--u)*14);letter-spacing:.14em;color:#a8b7c0;margin-top:calc(var(--u)*2);max-width:calc(var(--u)*460);white-space:normal;line-height:1.5;margin-left:auto;margin-right:auto}
 #daBar{width:calc(var(--u)*230);height:calc(var(--u)*11);margin:calc(var(--u)*5) auto 0;border:calc(var(--u)*2) solid rgba(255,214,150,.6);background:rgba(0,0,0,.65);padding:calc(var(--u)*1)}
 #daFill{height:100%;width:0;background:linear-gradient(90deg,#ffd479,#ffb648);transition:width .1s linear}
-#doorAtten.facing #daName{color:#fff}
 #doorAtten.facing #daHint{color:#ffd479}
 
 #scr-end{flex-direction:column;gap:calc(var(--u)*14);background:#000}
@@ -266,6 +263,58 @@ html,body{
 .failTitle{margin-top:calc(var(--u)*6);font-size:calc(var(--u)*38);font-weight:700;
   letter-spacing:.18em;color:#ff4437;text-shadow:0 0 calc(var(--u)*30) rgba(255,50,40,.55)}
 .failSub{margin-top:calc(var(--u)*12);font-size:calc(var(--u)*19);letter-spacing:.16em;color:#8d9aa3}
+
+/* ============ GAME OVER — clima FNAF ============ */
+.overScreen{background:radial-gradient(ellipse at 50% 42%, rgba(90,6,0,.55) 0%, rgba(30,2,0,.86) 55%, #030000 100%) !important;overflow:hidden}
+.overScan{position:absolute;inset:0;pointer-events:none;z-index:2;
+  background:repeating-linear-gradient(to bottom, rgba(0,0,0,.32) 0 2px, transparent 2px 5px)}
+.overEyes{position:absolute;left:50%;top:30%;transform:translateX(-50%);z-index:2;pointer-events:none;animation:eyesBlink 6.5s steps(1) infinite}
+.overEyes i{position:absolute;width:calc(var(--u)*46);height:calc(var(--u)*19);border-radius:50%/62% 62% 38% 38%;
+  background:radial-gradient(ellipse at center, #ff5a3c 0%, rgba(255,60,20,.55) 45%, rgba(255,30,0,0) 80%);
+  filter:blur(1px)}
+.overEyes i:first-child{left:calc(var(--u)*-72)}
+.overEyes i:last-child{right:calc(var(--u)*-72)}
+@keyframes eyesBlink{0%,93%,100%{transform:translateX(-50%) scaleY(1)}94%{transform:translateX(-50%) scaleY(0.03)}96%{transform:translateX(-50%) scaleY(1)}}
+.fnafPanel{position:relative;z-index:3;text-align:center;
+  border:calc(var(--u)*3) solid rgba(150,30,25,.6);
+  background:linear-gradient(#180706 0%, #0a0302 100%);
+  box-shadow:0 0 calc(var(--u)*120) rgba(200,20,10,.32), inset 0 0 calc(var(--u)*60) rgba(255,40,20,.12), 0 0 calc(var(--u)*2) rgba(255,80,50,.3) inset;
+  padding:calc(var(--u)*44) calc(var(--u)*64)}
+.winPanel{border-color:rgba(195,120,22,.62);
+  background:linear-gradient(#181104 0%, #0b0802 100%);
+  box-shadow:0 0 calc(var(--u)*130) rgba(255,160,30,.28), inset 0 0 calc(var(--u)*60) rgba(230,160,30,.14), 0 0 calc(var(--u)*2) rgba(255,200,90,.35) inset}
+.fnafKicker{font-size:calc(var(--u)*15);letter-spacing:.5em;text-indent:.5em;color:#7c6a54;margin-bottom:calc(var(--u)*10)}
+.fnafKicker.red{color:#a05040}
+.fnafKicker.gold{color:#a5823f}
+.fnafTitle{margin:calc(var(--u)*4) 0 calc(var(--u)*8) !important;
+  font-family:"Arial Black",Impact,"Haettenschweiler",sans-serif;
+  letter-spacing:.04em !important;line-height:.95 !important}
+.overPanel .fnafTitle{font-size:calc(var(--u)*84) !important;
+  animation:titleFlicker 4s steps(1) infinite}
+@keyframes titleFlicker{0%,100%{opacity:1}91%{opacity:1}92%{opacity:.35}93%{opacity:1}95%{opacity:.62}96%{opacity:1}}
+.winPanel .fnafTitle{font-size:calc(var(--u)*150) !important;letter-spacing:.08em !important;text-indent:.04em;
+  animation:goldPulse 3.4s ease-in-out infinite}
+@keyframes goldPulse{0%,100%{text-shadow:0 0 calc(var(--u)*90) rgba(255,170,40,.8)}50%{text-shadow:0 0 calc(var(--u)*135) rgba(255,190,60,1)}}
+.titleRule.red{background:linear-gradient(90deg,transparent,rgba(255,60,40,.9),transparent)}
+.titleRule.gold{background:linear-gradient(90deg,transparent,rgba(255,190,80,.9),transparent)}
+.overPanel .overSub,.winPanel .winSub{color:#b0a184 !important;letter-spacing:.32em;font-size:calc(var(--u)*17) !important}
+.winPanel .winSub{color:#cbb388 !important;text-shadow:0 0 calc(var(--u)*18) rgba(255,190,90,.35)}
+.redBtn{border-color:rgba(255,80,50,.5);color:#ffb3a0}
+.redBtn:hover{background:rgba(80,15,5,.9);color:#ffd0c0;box-shadow:0 0 calc(var(--u)*36) rgba(255,60,25,.45);border-color:#ff6a3c;transform:translateY(calc(var(--u)*-1))}
+.goldBtn{border-color:rgba(255,190,80,.5);color:#ffd98a}
+.goldBtn:hover{background:rgba(56,38,7,.9);color:#ffe9b0;box-shadow:0 0 calc(var(--u)*36) rgba(255,180,50,.45);border-color:#ffc96a;transform:translateY(calc(var(--u)*-1))}
+.fnafFoot{margin-top:calc(var(--u)*22);font-size:calc(var(--u)*11);letter-spacing:.34em;color:rgba(150,120,90,.5)}
+
+.winScreen{background:#030202 !important;overflow:hidden}
+.winSun{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);z-index:1;pointer-events:none;
+  width:calc(var(--u)*760);height:calc(var(--u)*380);
+  background:radial-gradient(ellipse at center, rgba(255,190,90,.5) 0%, rgba(230,120,40,.22) 45%, rgba(0,0,0,0) 78%)}
+.winRays{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);z-index:1;pointer-events:none;opacity:.32;
+  width:calc(var(--u)*940);height:calc(var(--u)*940);
+  background:repeating-conic-gradient(from 0deg, rgba(255,190,100,.4) 0 4deg, transparent 4deg 22deg);
+  -webkit-mask-image:radial-gradient(circle, #000 0%, transparent 70%);
+  animation:raysSpin 40s linear infinite}
+@keyframes raysSpin{from{transform:translate(-50%,-50%) rotate(0)}to{transform:translate(-50%,-50%) rotate(360deg)}}
 
 .nightWrap{text-align:center}
 .nightNum{font-size:calc(var(--u)*92);letter-spacing:.3em;color:#eef3f6;text-indent:.3em;

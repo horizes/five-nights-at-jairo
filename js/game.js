@@ -1375,8 +1375,6 @@ function shuffle(a) {
     // sobe quando a ligação/telefone está na tela para não sobrepor ATENDER/legenda
     el.classList.toggle('phoneOffset', !!(S.phone || S.friendCall));
     el.classList.remove('hidden');
-    const nm = (ART.CHARS[fid] && ART.CHARS[fid].name) || fid;
-    $('daName').textContent = nm.toUpperCase() + ' — ' + (side === 'F' ? 'PORTA DA FRENTE' : 'PORTA DE TRÁS');
     const d = S.doors[side];
     const att = d.atten || 0;
     $('daFill').style.width = Math.round(att * 100) + '%';
