@@ -853,9 +853,10 @@ function shuffle(a) {
       ? 0.9 + Math.random() * 1.6 + customDiff(id) * 1.35   // amigos mais agressivos exigem mais atenção
       : 0.9 + Math.random() * 1.6 + (S.night - 1) * 0.12;   // cada aparição exige atenção aleatória
     // porta avisa por som: batida na porta (estéreo pela posição da porta em relação a você)
+    // só toca enquanto o amigo ainda estiver naquela porta
     const rel = wrap(ART.ROOM.doors[side].angle - S.yaw);
     const pan = Math.abs(rel) < 0.18 ? 0 : Math.max(-0.85, Math.min(0.85, rel / 1.2));
-    AUDIO.knockDoor(pan);
+    AUDIO.knockDoor(pan, () => S.doors[side].char === id);
     S.shake = Math.max(S.shake, 6);
     return true;
   }

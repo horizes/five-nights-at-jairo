@@ -174,15 +174,20 @@ const AUDIO = (function () {
         tone({ freq: 70, to: 44, dur: 0.22, gain: 0.35, delay: i * 0.22 });
       }
     },
-    knockDoor(pan) {
+    knockDoor(pan, stillThere) {
       // pan: -1 esquerda … 0 centro … +1 direita — posição da porta na perspectiva de quem joga
+      // stillThere(): opcional; as batidas 2 e 3 só tocam se o amigo AINDA estiver na porta — evita "batida do nada" depois que ele saiu
       if (pan == null || isNaN(pan)) pan = 0;
       pan = Math.max(-0.9, Math.min(0.9, pan));
       if (!ok()) return;
       for (let i = 0; i < 3; i++) {
-        burst({ dur: 0.22, freq: 420, q: 2.4, gain: 0.55, type: 'bandpass', brown: true, delay: i * 0.30, pan });
-        tone({ freq: 95, to: 52, dur: 0.28, gain: 0.46, type: 'sine', delay: i * 0.30, pan });
-        burst({ dur: 0.05, freq: 1650, q: 4.0, gain: 0.17, type: 'highpass', delay: i * 0.30 + 0.004, pan }); // estalo da batida
+        const delayMs = i * 300;
+        setTimeout(() => {
+          if (stillThere && !stillThere()) return;
+          burst({ dur: 0.22, freq: 420, q: 2.4, gain: 0.55, type: 'bandpass', brown: true, delay: 0, pan });
+          tone({ freq: 95, to: 52, dur: 0.28, gain: 0.46, type: 'sine', delay: 0, pan });
+          burst({ dur: 0.05, freq: 1650, q: 4.0, gain: 0.17, type: 'highpass', delay: 0.004, pan }); // estalo da batida
+        }, delayMs);
       }
     },
     doorCreak() {
