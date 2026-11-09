@@ -94,13 +94,6 @@
 
   <div id="camBlink" aria-hidden="true"></div>
 
-  <!-- cursor customizado — reage às funções do jogo -->
-  <div id="cc" class="out" aria-hidden="true">
-    <i class="ccRing"></i>
-    <i class="ccDot"></i>
-    <span class="ccGlyph"></span>
-  </div>
-
   <button id="answerBtn" class="hidden">ATENDER</button>
   <div id="objective" class="hidden"></div>
   <div id="doorAtten" class="hidden">
@@ -252,9 +245,78 @@
   </section>
 </div>
 
-<script src="js/audio.js?v=179"></script>
-<script src="js/art-core.js?v=179"></script>
-<script src="js/art-room360.js?v=179"></script>
-<script src="js/game.js?v=179"></script>
+<!-- Cursor customizado — mãozinha de luva que muda de gesto por função (fora do #stage: posição fixa ancorada na viewport) -->
+<div id="cc" class="out" aria-hidden="true">
+
+  <!-- aberta (padrão / menus / luz / telefone) -->
+  <svg class="ccHand open" viewBox="0 0 64 64">
+    <g stroke="#111" stroke-width="3.4" fill="#f4f5f0" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M12 33 C6 31 3 41 8 47 C12 51 19 51 21 46 L21 39 A 23 23 0 0 0 12 33 Z"/>
+      <rect x="18" y="24" width="32" height="27" rx="12"/>
+      <rect x="12.5" y="1" width="9" height="29" rx="4.5"/>
+      <rect x="23" y="-2" width="9" height="31" rx="4.5"/>
+      <rect x="33.5" y="0" width="9" height="30" rx="4.5"/>
+      <rect x="44" y="8" width="8" height="21" rx="4"/>
+      <path d="M25 44 L43 36" fill="none" stroke="#2a2a2a" stroke-width="2" stroke-opacity=".55"/>
+    </g>
+  </svg>
+
+  <!-- indicador esticado (trabalho nas estações) -->
+  <svg class="ccHand point" viewBox="0 0 64 64">
+    <g stroke="#111" stroke-width="3.4" fill="#f4f5f0" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M10 34 C5 33 2 42 8 47 C12 51 18 50 21 46 L21 38 A 24 24 0 0 0 10 34 Z"/>
+      <rect x="14" y="21" width="36" height="26" rx="12"/>
+      <rect x="14.5" y="0" width="10" height="28" rx="5"/>
+      <circle cx="33" cy="19" r="6.5"/>
+      <circle cx="43.5" cy="19.5" r="6"/>
+      <path d="M25 44 L45 37" fill="none" stroke="#2a2a2a" stroke-width="2" stroke-opacity=".55"/>
+    </g>
+  </svg>
+
+  <!-- dois dedos (câmeras) -->
+  <svg class="ccHand pinch" viewBox="0 0 64 64">
+    <g stroke="#111" stroke-width="3.4" fill="#f4f5f0" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M10 33 C5 32 2 41 8 46 C12 50 18 49 21 45 L21 38 A 23 23 0 0 0 10 33 Z"/>
+      <rect x="15" y="19" width="35" height="27" rx="11"/>
+      <rect x="16" y="0" width="9.5" height="26" rx="4.75"/>
+      <rect x="27.5" y="0" width="9.5" height="26" rx="4.75"/>
+      <circle cx="41.5" cy="18" r="6"/>
+      <circle cx="51" cy="21" r="5.4"/>
+      <path d="M23 43 L44 36" fill="none" stroke="#2a2a2a" stroke-width="2" stroke-opacity=".55"/>
+    </g>
+  </svg>
+
+  <!-- punho fechado (amigo na porta — atenção) -->
+  <svg class="ccHand fist" viewBox="0 0 64 64">
+    <g stroke="#111" stroke-width="3.4" fill="#f4f5f0" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M9 34 C4 33 1 42 7 47 C11 51 17 51 20 46 L20 38 A 22 22 0 0 0 9 34 Z"/>
+      <rect x="15" y="20" width="36" height="28" rx="14"/>
+      <circle cx="18" cy="18.5" r="6.2"/>
+      <circle cx="28.4" cy="15.5" r="6.4"/>
+      <circle cx="38.8" cy="15.8" r="6.4"/>
+      <circle cx="49" cy="19.5" r="6"/>
+      <path d="M23 44 L43 38" fill="none" stroke="#2a2a2a" stroke-width="2" stroke-opacity=".55"/>
+    </g>
+  </svg>
+
+  <!-- garra/agache (arrastando a sala) -->
+  <svg class="ccHand claw" viewBox="0 0 64 64">
+    <g stroke="#111" stroke-width="3.4" fill="#f4f5f0" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M10 36 C5 35 2 44 8 49 C12 53 18 52 21 48 L21 41 A 23 23 0 0 0 10 36 Z"/>
+      <rect x="15" y="30" width="34" height="21" rx="11"/>
+      <rect x="12" y="9" width="9" height="26" rx="4.5" transform="rotate(-18 16 21)"/>
+      <rect x="24" y="4" width="9" height="30" rx="4.5"/>
+      <rect x="36" y="10" width="9" height="24" rx="4.5" transform="rotate(20 40 21)"/>
+      <path d="M22 47 L42 41" fill="none" stroke="#2a2a2a" stroke-width="2" stroke-opacity=".55"/>
+    </g>
+  </svg>
+
+</div>
+<span id="ccName" class="out" aria-hidden="true"></span>
+
+<script src="js/audio.js?v=180"></script>
+<script src="js/art-core.js?v=180"></script>
+<script src="js/art-room360.js?v=180"></script>
+<script src="js/game.js?v=180"></script>
 </body>
 </html>

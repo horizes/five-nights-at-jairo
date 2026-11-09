@@ -428,37 +428,40 @@ html,body{
   pointer-events:none !important;
 }
 
-/* ============ cursor customizado ============ */
+/* ============ cursor customizado — mãozinha de luva (gesto por função) ============ */
 #stage, #stage *{cursor:none}
-#cc{position:fixed;left:0;top:0;z-index:40;pointer-events:none;opacity:0;transition:opacity .14s ease}
-#stage:hover #cc{opacity:1}
+#cc{position:fixed;left:0;top:0;z-index:40;pointer-events:none;opacity:1;transform-origin:0 0}
 #cc.out{opacity:0 !important}
-#cc.grab .ccRing{transform:scale(1.55);border-color:#ffd479}
-.ccRing{position:absolute;left:-17px;top:-17px;width:34px;height:34px;border-radius:50%;
-  border:2.5px solid rgba(165,225,255,.85);box-shadow:0 0 13px rgba(165,225,255,.26);
-  transition:all .14s ease}
-.ccDot{position:absolute;left:-2.5px;top:-2.5px;width:5px;height:5px;border-radius:50%;
-  background:#ffd479;box-shadow:0 0 9px #ffc861;transition:all .14s ease}
-.ccGlyph{position:absolute;left:0;top:-27px;transform:translateX(-50%);
-  font-size:12px;font-weight:700;letter-spacing:.18em;color:#cfeeff;text-shadow:0 0 9px rgba(160,220,255,.5);
-  transition:all .14s ease;white-space:nowrap}
-#cc.st .ccRing{border-color:rgba(165,225,255,.85);box-shadow:0 0 13px rgba(165,225,255,.26)}
-#cc.work .ccRing{border-color:#5cff8f;box-shadow:0 0 16px rgba(92,255,143,.45)}
-#cc.work .ccGlyph{color:#c9ffd6;text-shadow:0 0 9px rgba(90,255,150,.55)}
-#cc.work .ccDot{background:#8cffab}
-#cc.door .ccRing{border-color:#ff6a4d;box-shadow:0 0 18px rgba(255,100,60,.5);width:46px;height:46px;left:-23px;top:-23px}
-#cc.door .ccGlyph{color:#ffb3a0;text-shadow:0 0 9px rgba(255,110,70,.6)}
-#cc.door .ccDot{background:#ff8a70}
-#cc.cam .ccRing{border-color:#6bd6ff;box-shadow:0 0 16px rgba(107,214,255,.42)}
-#cc.cam .ccGlyph{color:#bdeaff;text-shadow:0 0 9px rgba(120,220,255,.55)}
-#cc.cam .ccDot{background:#8ce6ff}
-#cc.light .ccRing{border-color:#ffe8a0;box-shadow:0 0 18px rgba(255,230,130,.6)}
-#cc.light .ccGlyph{color:#fff3c0;text-shadow:0 0 9px rgba(255,230,130,.65)}
-#cc.light .ccDot{background:#fff3b8}
-#cc.menu .ccRing{border-color:#fff;box-shadow:0 0 12px rgba(255,255,255,.35);width:22px;height:22px;left:-11px;top:-11px}
-#cc.menu .ccGlyph{color:#fff;text-shadow:0 0 9px rgba(255,255,255,.6)}
-#cc.menu .ccDot{background:#fff}
-#cc.phone .ccRing{border-color:#ffd479;box-shadow:0 0 18px rgba(255,212,121,.55);animation:ccPulse .8s infinite}
-@keyframes ccPulse{50%{box-shadow:0 0 26px rgba(255,214,124,.7)}}
-#cc.phone .ccGlyph{color:#ffe9a8;text-shadow:0 0 9px rgba(255,212,121,.6)}
-#cc.phone .ccDot{background:#ffd479}
+#ccName{position:absolute;left:50%;top:52px;transform:translateX(-50%);
+  font-size:11px;font-weight:700;letter-spacing:.22em;color:#cfeeff;white-space:nowrap;
+  text-shadow:0 1px 4px #000, 0 0 10px rgba(120,210,255,.4);transition:color .14s ease}
+#cc .ccHand{display:none;width:64px;height:64px;overflow:visible;
+  transform:translate(-50%,-34%);
+  filter:drop-shadow(0 5px 9px rgba(0,0,0,.65))}
+#cc.st .ccHand.open,#cc.menu .ccHand.open,#cc.light .ccHand.open,#cc.phone .ccHand.open{display:block}
+#cc.work .ccHand.point,#cc.cam .ccHand.pinch,#cc.door .ccHand.fist,#cc.grab .ccHand.claw{display:block}
+/* aberto / padrão — ciano suave */
+#cc.st .ccHand.open{filter:drop-shadow(0 5px 9px rgba(0,0,0,.65)) drop-shadow(0 0 7px rgba(160,225,255,.4))}
+#cc.st #ccName{color:#cfeeff}
+/* menu — branco */
+#cc.menu .ccHand.open{filter:drop-shadow(0 5px 9px rgba(0,0,0,.7)) drop-shadow(0 0 8px rgba(255,255,255,.5))}
+#cc.menu #ccName{color:#ffffff}
+/* luz — amarelo quente */
+#cc.light .ccHand.open{filter:drop-shadow(0 5px 9px rgba(0,0,0,.6)) drop-shadow(0 0 10px rgba(255,230,130,.7))}
+#cc.light #ccName{color:#fff3c0}
+/* telefone — dourado pulsante */
+#cc.phone .ccHand.open{filter:drop-shadow(0 5px 9px rgba(0,0,0,.6)) drop-shadow(0 0 10px rgba(255,212,121,.75));animation:handPulse .8s infinite}
+@keyframes handPulse{50%{transform:translate(-50%,-34%) scale(1.14)}}
+#cc.phone #ccName{color:#ffe9a8}
+/* trabalho — verde (indicador esticado) */
+#cc.work .ccHand.point{filter:drop-shadow(0 5px 9px rgba(0,0,0,.6)) drop-shadow(0 0 10px rgba(92,255,143,.6))}
+#cc.work #ccName{color:#c9ffd6}
+/* câmera — ciano (dois dedos) */
+#cc.cam .ccHand.pinch{filter:drop-shadow(0 5px 9px rgba(0,0,0,.6)) drop-shadow(0 0 9px rgba(107,214,255,.6))}
+#cc.cam #ccName{color:#bdeaff}
+/* porta / atenção — vermelho (punho fechado) */
+#cc.door .ccHand.fist{filter:drop-shadow(0 5px 9px rgba(0,0,0,.65)) drop-shadow(0 0 13px rgba(255,100,60,.65))}
+#cc.door #ccName{color:#ffb3a0}
+/* arrastando — dourado (garra) */
+#cc.grab .ccHand.claw{filter:drop-shadow(0 5px 9px rgba(0,0,0,.65)) drop-shadow(0 0 12px rgba(255,212,121,.7))}
+#cc.grab #ccName{color:#ffe9a8}

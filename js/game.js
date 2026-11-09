@@ -852,8 +852,10 @@ function shuffle(a) {
     d.attenNeed = (S.night | 0) >= 7
       ? 0.9 + Math.random() * 1.6 + customDiff(id) * 1.35   // amigos mais agressivos exigem mais atenção
       : 0.9 + Math.random() * 1.6 + (S.night - 1) * 0.12;   // cada aparição exige atenção aleatória
-    // porta avisa por som: batida na porta
-    AUDIO.knockDoor();
+    // porta avisa por som: batida na porta (estéreo pela posição da porta em relação a você)
+    const rel = wrap(ART.ROOM.doors[side].angle - S.yaw);
+    const pan = Math.abs(rel) < 0.18 ? 0 : Math.max(-0.85, Math.min(0.85, rel / 1.2));
+    AUDIO.knockDoor(pan);
     S.shake = Math.max(S.shake, 6);
     return true;
   }
@@ -1716,21 +1718,21 @@ function shuffle(a) {
       });
     });
 
-    /* ---------- cursor customizado ---------- */
+    /* ---------- cursor customizado — mãozinha de luva ---------- */
     (function bindCursor() {
       const cc = $('cc');
       if (!cc) return;
-      const ccGlyph = cc.querySelector('.ccGlyph');
+      const ccName = cc.querySelector('#ccName') || $('ccName');
       const setState = (s, glyph) => {
-        cc.className = s;                       // 'st' | 'work' | 'door' | 'cam' | 'light' | 'menu' | 'phone' | 'out'
-        if (ccGlyph) ccGlyph.textContent = glyph == null ? '' : glyph;
+        cc.className = s;                       // 'st' | 'work' | 'door' | 'cam' | 'light' | 'menu' | 'phone' | 'out' | 'grab'
+        if (ccName) ccName.textContent = glyph == null ? '' : glyph;
       };
       const moveCc = (e) => {
         cc.style.transform = 'translate3d(' + e.clientX + 'px,' + e.clientY + 'px,0)';
       };
       const pickState = (e) => {
         const t = e.target;
-        // botões e controles principais → cursor de menu
+        // botões e controles principais → mão aberta
         if (t && t.closest && t.closest('button, a, input, select, .camRoom, #camToggle, #answerBtn')) {
           if (t.id === 'answerBtn' || (t.closest && t.closest('#answerBtn'))) return ['phone', 'ATENDER'];
           return ['menu', ''];
@@ -1758,25 +1760,30 @@ function shuffle(a) {
               if (near) return ['work', job.step === 'print' ? 'IMPRIMIR' : 'EMBALAR'];
             }
           }
-          // amigo à vista na porta da sala
+          // amigo à vista na porta da sala — punho fechado para encarar
           const doorHere = (S.doors.F.char && !S.doors.F.leaving) ? 'F' : (S.doors.B.char && !S.doors.B.leaving) ? 'B' : null;
           if (doorHere) {
             const ang = doorHere === 'F' ? 0 : Math.PI;
             if (Math.abs(wrap(ang - S.yaw)) < 0.55) {
-              return ['door', 'SEGURAR E'];
+              return ['door', 'SEGURE E'];
             }
           }
           return ['st', ''];
         }
-        // menus fora do jogo
+        // menus fora do jogo → mão aberta
         if (t && t.closest && t.closest('.screen, .panelBox')) return ['menu', ''];
         return ['st', ''];
       };
-      stage.addEventListener('pointermove', (e) => {
+      const moveAndPick = (e) => {
         moveCc(e);
         const picked = pickState(e);
         setState(picked[0], picked[1]);
-      });
+      };
+      // se tocar fora do palco (ex.: nas barras do navegador), esconde
+      window.addEventListener('pointermove', (e) => {
+        if (e.target && stage.contains(e.target)) moveAndPick(e);
+        else setState('out', '');
+      }, { passive: true });
       stage.addEventListener('pointerdown', () => { cc.classList.add('grab'); });
       const endGrab = () => cc.classList.remove('grab');
       stage.addEventListener('pointerup', endGrab);
