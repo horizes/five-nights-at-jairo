@@ -157,7 +157,7 @@ function shuffle(a) {
     3: [
       'Alô. Tudo bem por aí?',
       'Olha, hoje são {q} pedidos. O cliente gosta do seu trabalho.',
-      'Tome cuidado, Jairinho: a bateria do seu celular está ficando viciada. Gasta cada vez mais rápido.',
+      'Tome cuidado, Jairinho, a bateria do seu celular está ficando viciada. Gasta cada vez mais rápido.',
       'Qualquer dúvida é só me ligar. Boa noite, filho.'
     ],
     4: [
@@ -169,7 +169,7 @@ function shuffle(a) {
     5: [
       'Alô, filho. Como está?',
       'Olha, amanhã é a última entrega do contrato. São {q} pedidos.',
-      'Jairinho, preste atenção: a bateria do seu celular VICIOU de vez. Economize bateria esta noite.',
+      'Jairinho, preste atenção, a bateria do seu celular VICIOU de vez. Economize bateria esta noite.',
       'Se sair tudo certo, a gráfica renova com a gente.',
       'Você faz um trabalho impecável. Orgulho de você. Boa noite!'
     ],
@@ -852,7 +852,7 @@ function shuffle(a) {
     if (attending) {
       d.atten = Math.min(1, d.atten + dt / (d.attenNeed || attenTime(S.night)));
       // balão de fala: evento semi-raro — poucas vezes por noite no máximo (texto fica vazio por enquanto)
-      if (d.bubbleT <= 0 && (S.bubbleCount || 0) < 3 && Math.random() < dt * 0.035) {
+      if (d.bubbleT <= 0 && (S.bubbleCount || 0) < 5 && Math.random() < dt * 0.10) {
         S.bubbleCount = (S.bubbleCount || 0) + 1;
         d.bubbleT = 2.6;
         d.bubbleText = pickSpeechLine(id);
