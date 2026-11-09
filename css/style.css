@@ -1,5 +1,5 @@
-/* ============================================================
-   Five Nights at Jairo's — estilo CRT / VHS
+﻿/* ============================================================
+   Five Nights at Jairo's â€” estilo CRT / VHS
    ============================================================ */
 :root{
   --u: 1px;              /* unidade de escala (setada por JS) */
@@ -51,7 +51,7 @@ html,body{
 #flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
 #black{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .45s ease}
 
-/* ---------- HUD (sempre por cima das animações de câmera; só as telas de menu cobrem) ---------- */
+/* ---------- HUD (sempre por cima das animaÃ§Ãµes de cÃ¢mera; sÃ³ as telas de menu cobrem) ---------- */
 #hud{position:absolute;inset:0;pointer-events:none;color:#dbe3e8;z-index:18;
   font-size:calc(var(--u)*22);letter-spacing:.06em}
 .hidden{display:none !important}
@@ -94,7 +94,7 @@ html,body{
   box-shadow:0 0 calc(var(--u)*12) rgba(255,180,60,.6)}
 #jobBox.done #jobCount{color:#ffd479}
 
-/* ---------- câmeras ---------- */
+/* ---------- cÃ¢meras ---------- */
 #camToggle{position:absolute;left:calc(var(--u)*42);bottom:calc(var(--u)*162);
   font-family:inherit;font-size:calc(var(--u)*18);letter-spacing:.2em;
   color:#cfdbe2;background:rgba(10,16,20,.85);border:calc(var(--u)*3) solid rgba(160,190,205,.6);
@@ -108,7 +108,7 @@ html,body{
   display:block;overflow:hidden;box-shadow:0 0 calc(var(--u)*30) rgba(0,0,0,.7);
   visibility:hidden;opacity:0;transform:translateY(4%);
   transition:opacity .17s ease,transform .17s ease,visibility 0s linear .17s}
-/* o mapa é parte da tela das câmeras: aparece/some exatamente junto com ela */
+/* o mapa Ã© parte da tela das cÃ¢meras: aparece/some exatamente junto com ela */
 #camBox.show{visibility:visible;opacity:1;transform:translateY(0);pointer-events:auto;
   transition:opacity .17s ease,transform .17s ease}
 #camTop{position:absolute;top:calc(var(--u)*8);left:50%;transform:translateX(-50%);
@@ -159,7 +159,7 @@ html,body{
 .camLine.vTIOff{top:38%;left:78%;width:2px;height:34%}
 
 #doorAtten{position:absolute;left:50%;bottom:calc(var(--u)*205);transform:translateX(-50%);z-index:9;text-align:center;pointer-events:none;transition:bottom .25s ease}
-/* sobe da zona de sobreposição quando há ligação/telefone na tela */
+/* sobe da zona de sobreposiÃ§Ã£o quando hÃ¡ ligaÃ§Ã£o/telefone na tela */
 #doorAtten.phoneOffset{bottom:calc(var(--u)*320)}
 #daHint{font-size:calc(var(--u)*14);letter-spacing:.14em;color:#a8b7c0;margin-top:calc(var(--u)*2);max-width:calc(var(--u)*460);white-space:normal;line-height:1.5;margin-left:auto;margin-right:auto}
 #daBar{width:calc(var(--u)*230);height:calc(var(--u)*11);margin:calc(var(--u)*5) auto 0;border:calc(var(--u)*2) solid rgba(255,214,150,.6);background:rgba(0,0,0,.65);padding:calc(var(--u)*1)}
@@ -264,7 +264,7 @@ html,body{
   letter-spacing:.18em;color:#ff4437;text-shadow:0 0 calc(var(--u)*30) rgba(255,50,40,.55)}
 .failSub{margin-top:calc(var(--u)*12);font-size:calc(var(--u)*19);letter-spacing:.16em;color:#8d9aa3}
 
-/* ============ GAME OVER — clima FNAF ============ */
+/* ============ GAME OVER â€” clima FNAF ============ */
 .overScreen{background:radial-gradient(ellipse at 50% 42%, rgba(90,6,0,.55) 0%, rgba(30,2,0,.86) 55%, #030000 100%) !important;overflow:hidden}
 .overScan{position:absolute;inset:0;pointer-events:none;z-index:2;
   background:repeating-linear-gradient(to bottom, rgba(0,0,0,.32) 0 2px, transparent 2px 5px)}
@@ -354,7 +354,7 @@ html,body{
 .helpBox .menu .btn{min-width:calc(var(--u)*240);font-size:calc(var(--u)*17) !important;padding:calc(var(--u)*9) calc(var(--u)*24) !important}
 .helpBox .menu{justify-content:center}
 
-/* ---------- cortina de câmera (FNAF-style) ---------- */
+/* ---------- cortina de cÃ¢mera (FNAF-style) ---------- */
 #camWipe{position:absolute;inset:0;z-index:7;pointer-events:none;overflow:hidden;
   transform:translateY(103%);opacity:0;
   transition:transform .26s cubic-bezier(.2,1.1,.3,1),opacity .16s ease}
@@ -400,10 +400,10 @@ html,body{
 #camWipe.hold{transition:none;transform:translateY(0);opacity:0}
 #camWipe.cover{transform:translateY(0);opacity:1;transition:opacity .18s ease}
 
-/* pausa congela TODAS as animações (CSS e canvas) */
+/* pausa congela TODAS as animaÃ§Ãµes (CSS e canvas) */
 #stage.gamepaused *{animation-play-state:paused !important}
 
-/* piscar de tela ao trocar de câmera (só a área do canvas) */
+/* piscar de tela ao trocar de cÃ¢mera (sÃ³ a Ã¡rea do canvas) */
 #camBlink{position:absolute;inset:0;z-index:7;pointer-events:none;background:#000;opacity:0}
 #camBlink.go{animation:camBlink .3s steps(4,end) both}
 @keyframes camBlink{
@@ -415,55 +415,19 @@ html,body{
   100%{opacity:0}
 }
 
-/* durante o jumpscare: sem HUD, sem controles, sem botões */
+/* durante o jumpscare: sem HUD, sem controles, sem botÃµes */
 #stage.jumping #hud,
 #stage.jumping #camToggle,
 #stage.jumping #camBox,
 #stage.jumping #answerBtn,
 #stage.jumping #objective,
 #stage.jumping #doorAtten,
-#stage.jumping #subtitle,
-#stage.jumping #cc{
+#stage.jumping #subtitle{
   opacity:0 !important;
   pointer-events:none !important;
 }
+/* cursor nativo do sistema â€” sÃ³ botÃµes em pointer, resto default */
+#stage button{cursor:pointer}
+#stage .camRoom{cursor:pointer}
+#answerBtn{cursor:pointer}
 
-/* ============ cursor customizado — mãozinha de luva (gesto por função) ============ */
-#stage, #stage *{cursor:none}
-#cc{position:fixed;left:0;top:0;z-index:40;pointer-events:none;opacity:1;transform-origin:0 0}
-#cc.out{opacity:0 !important}
-#ccName{position:absolute;left:50%;top:58px;transform:translateX(-50%);
-  font-size:11px;font-weight:700;letter-spacing:.22em;color:#cfeeff;white-space:nowrap;
-  text-shadow:0 1px 4px #000, 0 0 10px rgba(120,210,255,.4);transition:color .14s ease}
-#cc .ccHand{display:none;overflow:visible;
-  transform:translate(-50%,-36%);
-  animation:ccBreathe 2.4s ease-in-out infinite;
-  filter:drop-shadow(0 5px 9px rgba(0,0,0,.65))}
-@keyframes ccBreathe{0%,100%{transform:translate(-50%,-36%) translateY(0)}50%{transform:translate(-50%,-36%) translateY(-3px)}}
-#cc.st .ccHand.open,#cc.menu .ccHand.open,#cc.light .ccHand.open,#cc.phone .ccHand.open{display:block}
-#cc.work .ccHand.point,#cc.cam .ccHand.pinch,#cc.door .ccHand.fist,#cc.grab .ccHand.claw{display:block}
-/* aberto / padrão — ciano suave */
-#cc.st .ccHand.open{filter:drop-shadow(0 5px 9px rgba(0,0,0,.65)) drop-shadow(0 0 7px rgba(160,225,255,.4))}
-#cc.st #ccName{color:#cfeeff}
-/* menu — branco */
-#cc.menu .ccHand.open{filter:drop-shadow(0 5px 9px rgba(0,0,0,.7)) drop-shadow(0 0 8px rgba(255,255,255,.5))}
-#cc.menu #ccName{color:#ffffff}
-/* luz — amarelo quente */
-#cc.light .ccHand.open{filter:drop-shadow(0 5px 9px rgba(0,0,0,.6)) drop-shadow(0 0 10px rgba(255,230,130,.7))}
-#cc.light #ccName{color:#fff3c0}
-/* telefone — dourado pulsante */
-#cc.phone .ccHand.open{filter:drop-shadow(0 5px 9px rgba(0,0,0,.6)) drop-shadow(0 0 10px rgba(255,212,121,.75));animation:handPulse .8s infinite}
-@keyframes handPulse{50%{transform:translate(-50%,-36%) scale(1.14)}}
-#cc.phone #ccName{color:#ffe9a8}
-/* trabalho — verde (indicador esticado) */
-#cc.work .ccHand.point{filter:drop-shadow(0 5px 9px rgba(0,0,0,.6)) drop-shadow(0 0 10px rgba(92,255,143,.6))}
-#cc.work #ccName{color:#c9ffd6}
-/* câmera — ciano (dois dedos) */
-#cc.cam .ccHand.pinch{filter:drop-shadow(0 5px 9px rgba(0,0,0,.6)) drop-shadow(0 0 9px rgba(107,214,255,.6))}
-#cc.cam #ccName{color:#bdeaff}
-/* porta / atenção — vermelho (punho fechado) */
-#cc.door .ccHand.fist{filter:drop-shadow(0 5px 9px rgba(0,0,0,.65)) drop-shadow(0 0 13px rgba(255,100,60,.65))}
-#cc.door #ccName{color:#ffb3a0}
-/* arrastando — dourado (garra) */
-#cc.grab .ccHand.claw{filter:drop-shadow(0 5px 9px rgba(0,0,0,.65)) drop-shadow(0 0 12px rgba(255,212,121,.7))}
-#cc.grab #ccName{color:#ffe9a8}
