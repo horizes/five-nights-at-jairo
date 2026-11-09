@@ -1064,7 +1064,7 @@
       g.beginPath(); g.moveTo(cx - 74, cy - 74); g.lineTo(cx + 74, cy + 74); g.stroke();
       // texto
       A.text(g, 'SEM BATERIA', cx, cy + 210, { font: 'bold 44px "Courier New", monospace', color: 'rgba(240,244,248,.92)', spacing: 10, align: 'center', baseline: 'middle' });
-      A.text(g, 'o celular morreu — câmeras offline', cx, cy + 268, { font: '17px "Courier New", monospace', color: 'rgba(160,175,185,.6)', spacing: 3, align: 'center', baseline: 'middle' });
+
       return;
     }
     const roomNames = ['GALPÃO DE ENTRADA', 'RECEBIMENTO', 'ADMINISTRATIVO', 'ALMOXARIFADO', 'PRODUÇÃO', 'COZINHA', 'ACABAMENTO E CORTE', 'CORREDOR DA FRENTE', 'CORREDOR DE TRÁS'];

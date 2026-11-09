@@ -37,7 +37,22 @@ const GAME = (function () {
     6: { hori: 8, akira: 14, leo: 14, re: 13 }
   };
 
-  const QUOTA = { 1: 4, 2: 5, 3: 5, 4: 6, 5: 6, 6: 6, 7: 6 };
+  const QUOTA = { 1: 4, 2: 5, 3: 5, 4: 6, 5: 7, 6: 7, 7: 6 };
+
+  /* curva de dificuldade da campanha:
+     1 = tutorial/fácil · 2-3 = médias · 4-5 = bem difíceis · 6 = super difícil */
+  const DIFF = {
+    1: { mult: 1.00, ai: 1.00, patience: 10.0, atten: 1.5, decay: 1.2, gap: 19 },
+    2: { mult: 1.05, ai: 1.15, patience: 8.0,  atten: 2.0, decay: 1.4, gap: 17 },
+    3: { mult: 1.12, ai: 1.30, patience: 6.5,  atten: 2.5, decay: 1.7, gap: 15 },
+    4: { mult: 1.25, ai: 1.55, patience: 4.8,  atten: 3.5, decay: 2.2, gap: 12 },
+    5: { mult: 1.35, ai: 1.75, patience: 3.8,  atten: 4.5, decay: 2.7, gap: 10 },
+    6: { mult: 1.45, ai: 2.00, patience: 3.0,  atten: 5.5, decay: 3.4, gap: 7  }
+  };
+  function diffOf(night) {
+    const n = night | 0;
+    return DIFF[n] || DIFF[6];
+  }
 const PRINTERS = ['print1', 'print2', 'print3'];
 let lastPrinter = null;
 
@@ -119,7 +134,7 @@ function shuffle(a) {
       const avg = ['hori', 'akira', 'leo', 're'].reduce((a, k) => a + (((levels || {})[k]) | 0), 0) / 4;
       return 1 + (avg / 20) * 0.45;             // personalizada: 1.0 … 1.45 (trabalho mais pesado com amigos mais agressivos)
     }
-    return 1 + ((night | 0) - 1) * 0.07;       // campanha: 1.0 … 1.35 (as últimas noites pesam de verdade)
+    return diffOf(night).mult;                     // campanha: curva por noite (1,00 … 1,45)
   }
 
   /* ---------------- ligações do pai ---------------- */
@@ -423,7 +438,7 @@ function shuffle(a) {
   function arrivalGapFor(id) {
     const night = S.night | 0;
     if (night >= 7) return Math.max(6, 19 - customDiff(id) * 10);   // nível 20 → ~9s
-    return Math.max(7, 19 - (night - 1) * 2.2);                      // noite 1: ~19s … noite 6: ~8s
+    return diffOf(night).gap;                                             // campanha: diminui a cada noite (19 → 7)
   }
 
   /* agenda as chegadas dos amigos (primeira ligação só após um respiro variável após o pai) —
@@ -642,7 +657,7 @@ function shuffle(a) {
 
   /* ---------------- IA ---------------- */
   function castHas(id) { return S.cast && S.cast.indexOf(id) !== -1; }
-  function aiSpeed(night) { return Math.min(1.8, 1 + (night - 1) * 0.33); }
+  function aiSpeed(night) { return Math.min(2.2, diffOf(night).ai); }
   /* dificuldade individual (0..1) — usada na noite personalizada (níveis do menu) */
   function customDiff(id) {
     if (!S || (S.night | 0) < 7) return 0;
@@ -658,12 +673,12 @@ function shuffle(a) {
       const d = customDiff(id);
       return Math.max(4.4, 9.5 - d * 4.3);      // nível 0 → 9.5s · nível 20 → 5.2s
     }
-    return Math.max(3.3, 9.5 - (night - 1) * 1.4);   // respira: 2→8.1 · 3→6.7 · 4→5.3 · 5→3.9 · 6→3.3 — noites finais muito mais perigosas
+    return diffOf(night).patience;                    // campanha: curva por noite (10,0s → 3,0s)
   }
-  function attenTime(night) { return 1.5 + (night - 1) * 0.55; }
+  function attenTime(night) { return (night | 0) >= 7 ? 1.5 + (night - 1) * 0.55 : diffOf(night).atten; }
   function attenDecay(night, id) {
     if ((night | 0) >= 7 && id) return 1.15 + customDiff(id) * 2.35;  // nível 0 → 1.15 · nível 20 → 3.5
-    return 1.25 + (night - 1) * 0.5;                    // atenção decai bem mais rápido nas noites avançadas
+    return diffOf(night).decay;                                       // campanha: curva por noite (1,2 → 3,4)
   }
 
   function setCamPos(id, room) {
@@ -1617,7 +1632,11 @@ function shuffle(a) {
       const cb = $('camBox');
       if (!cb) return;
       if (preset === 'hide') cb.classList.remove('show');
-      else if (preset === 'show') cb.classList.add('show');
+      else if (preset === 'show') {
+        // sem bateria: o mapa NUNCA aparece (celular morto)
+        if (S && S.out.active) cb.classList.remove('show');
+        else cb.classList.add('show');
+      }
     }
     function applyCamVisual() {
       document.querySelectorAll('.camRoom').forEach(b => {
