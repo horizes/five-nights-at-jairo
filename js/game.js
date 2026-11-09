@@ -508,6 +508,7 @@ function shuffle(a) {
     if (!S) return;
     S.friendCall = null;
     $('subtitle').classList.add('hidden');
+    $('subtitleText').textContent = '';
     AUDIO.phoneEnd(); // sininho de despedida
   }
 
