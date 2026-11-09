@@ -253,6 +253,7 @@ function shuffle(a) {
       shake: 0,
       ended: false,
       objectiveShown: false,
+      bubbleCount: 0,
       phone: null,
       ambient: 7 + Math.random() * 8,
       ordersDone: 0,
@@ -825,8 +826,9 @@ function shuffle(a) {
     if (d.atten == null) d.atten = 0;
     if (attending) {
       d.atten = Math.min(1, d.atten + dt / (d.attenNeed || attenTime(S.night)));
-      // balão de fala: chance aleatória enquanto você encara o amigo (texto fica vazio por enquanto)
-      if (d.bubbleT <= 0 && Math.random() < dt * 0.30) {
+      // balão de fala: evento semi-raro — poucas vezes por noite no máximo (texto fica vazio por enquanto)
+      if (d.bubbleT <= 0 && (S.bubbleCount || 0) < 3 && Math.random() < dt * 0.035) {
+        S.bubbleCount = (S.bubbleCount || 0) + 1;
         d.bubbleT = 2.6;
         d.bubbleText = pickSpeechLine(id);
         d.bubbleSide = Math.random() < 0.5 ? -1 : 1;    // lado varia a cada balão
