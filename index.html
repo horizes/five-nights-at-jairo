@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Five Nights at Jairo's</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="stage">
+  <canvas id="view" width="1600" height="900"></canvas>
+
+  <div class="fx scan"></div>
+  <div class="fx vig"></div>
+  <div class="fx flicker"></div>
+  <div class="fx chroma"></div>
+
+  <div id="hud" class="hidden">
+    <div id="timeBox">
+      <div id="clock">12 AM</div>
+      <div id="nightLbl">NOITE 1</div>
+    </div>
+
+    <div id="powerBox">
+      <div id="powerRow"><span id="powerLabel">BATERIA DO CELULAR</span><span id="powerPct">100%</span></div>
+      <div id="powerBar"><div id="powerFill"></div></div>
+      <div id="usageRow"><span>CONSUMO</span><span id="usageBars"></span></div>
+    </div>
+
+    <div id="jobBox" class="hidden">
+      <div id="jobTop"><span>PEDIDOS</span><span id="jobCount">0/3</span></div>
+      <div id="jobName">&mdash;</div>
+      <div id="jobStep">Imprimir na offset</div>
+      <div id="jobBar"><div id="jobFill"></div></div>
+    </div>
+
+    <div id="toast" class="hidden"></div>
+  </div>
+
+  <button id="camToggle">CÂMERAS</button>
+
+  <div id="camBox">
+    <div id="camTop"><span>Gráfica do Jairo</span></div>
+    <div id="camMapRef">
+      <svg id="camMapSvg" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg" aria-label="Mapa da gráfica">
+        <rect width="800" height="800" fill="rgba(5,7,10,.45)"/>
+        <g fill="#ffffff" stroke="#ffffff" stroke-width="4" stroke-opacity=".9">
+          <rect x="20" y="10" width="760" height="115" fill-opacity="0.10"/>
+          <rect x="20" y="125" width="240" height="140" fill-opacity="0.10"/>
+          <rect x="260" y="125" width="280" height="140" fill-opacity="0.10"/>
+          <rect x="540" y="125" width="240" height="140" fill-opacity="0.10"/>
+          <rect x="20" y="265" width="760" height="75" fill-opacity="0.13"/>
+          <rect x="20" y="340" width="240" height="160" fill-opacity="0.10"/>
+          <rect x="20" y="500" width="240" height="175" fill-opacity="0.10"/>
+          <rect x="260" y="340" width="280" height="335" fill-opacity="0.13"/>
+          <rect x="540" y="340" width="240" height="335" fill-opacity="0.10"/>
+          <rect x="20" y="675" width="760" height="65" fill-opacity="0.13"/>
+        </g>
+        <g fill="#ffffff" font-family="Courier New, monospace" paint-order="stroke" stroke="rgba(0,0,0,.75)" stroke-width="5" stroke-linejoin="round">
+          <text x="400" y="48" font-size="30" font-weight="bold" text-anchor="middle">GALPÃO DE ENTRADA</text>
+          <text x="140" y="168" font-size="26" text-anchor="middle">RECEBIMENTO</text>
+          <text x="400" y="156" font-size="25" text-anchor="middle">ACABAMENTO</text>
+          <text x="400" y="184" font-size="25" text-anchor="middle">E CORTE</text>
+          <text x="660" y="156" font-size="17" font-weight="bold" text-anchor="middle">ADMINISTRATIVO</text>
+          <text x="40" y="310" font-size="22" font-weight="bold" text-anchor="start">CORREDOR DA FRENTE</text>
+          <text x="140" y="378" font-size="24" text-anchor="middle">ALMOXARIFADO</text>
+          <text x="140" y="553" font-size="27" font-weight="bold" text-anchor="middle">PRODUÇÃO</text>
+          <text x="400" y="414" font-size="33" font-weight="bold" text-anchor="middle" fill="rgba(255,255,255,.85)">SALA DAS</text>
+          <text x="400" y="454" font-size="33" font-weight="bold" text-anchor="middle" fill="rgba(255,255,255,.85)">IMPRESSÕES</text>
+          <text x="400" y="614" font-size="21" font-weight="bold" text-anchor="middle" fill="#8fd0ff">VOCÊ</text>
+          <text x="660" y="380" font-size="30" font-weight="bold" text-anchor="middle">COZINHA</text>
+          <text x="40" y="716" font-size="21" font-weight="bold" text-anchor="start">CORREDOR DE TRÁS</text>
+        </g>
+      </svg>
+      <button class="camRoom" data-cam="0" style="top:12%;left:50%">CAM 1A</button>
+      <button class="camRoom" data-cam="1" style="top:26.5%;left:17.5%">CAM 1B</button>
+      <button class="camRoom" data-cam="2" style="top:26.5%;left:82.5%">CAM 1C</button>
+      <button class="camRoom" data-cam="3" style="top:52.5%;left:17.5%">CAM 2A</button>
+      <button class="camRoom" data-cam="4" style="top:73.5%;left:17.5%">CAM 2B</button>
+      <button class="camRoom" data-cam="5" style="top:53%;left:82.5%">CAM 3A</button>
+      <button class="camRoom" data-cam="6" style="top:28.5%;left:50%">CAM 3B</button>
+      <button class="camRoom" data-cam="7" style="top:37.8%;left:50%">CAM 4A</button>
+      <button class="camRoom" data-cam="8" style="top:89.5%;left:50%">CAM 4B</button>
+    </div>
+  </div>
+
+  <div id="camWipe" aria-hidden="true">
+    <div class="cwBezel"></div>
+    <div class="cwPlate">MONITOR · CÂMERAS</div>
+    <div class="cwStatic"><div class="cwBar b1"></div><div class="cwBar b2"></div><div class="cwBar b3"></div></div>
+    <i class="cwScrew tl"></i><i class="cwScrew tr"></i><i class="cwScrew bl"></i><i class="cwScrew br"></i>
+    <div class="cwLine"></div>
+  </div>
+
+  <div id="camBlink" aria-hidden="true"></div>
+
+  <button id="answerBtn" class="hidden">ATENDER</button>
+  <div id="objective" class="hidden"></div>
+  <div id="doorAtten" class="hidden">
+    <div id="daName">—</div>
+    <div id="daHint">segure E olhando para a porta</div>
+    <div id="daBar"><div id="daFill"></div></div>
+  </div>
+  <div id="subtitle" class="hidden"><span id="subtitleText"></span></div>
+  <div id="flash"></div>
+  <div id="black"></div>
+
+  <!-- ============ TELA INICIAL ============ -->
+  <section id="scr-title" class="screen">
+    <div class="titleWrap">
+      <h1 class="bigTitle">FIVE NIGHTS<br><span class="at">at</span> JAIRO'S</h1>
+      <div class="neonSub">SALA DAS IMPRESSÕES &middot; TURNO DA NOITE</div>
+      <div class="titleRule"></div>
+      <div id="titleMenu" class="menu">
+        <button class="btn" data-act="continue">CONTINUAR</button>
+        <button class="btn" data-act="new">NOVO JOGO</button>
+        <button class="btn" data-act="custom">NOITE PERSONALIZADA</button>
+        <button class="btn" data-act="help">COMO JOGAR</button>
+      </div>
+    </div>
+    <div class="titleVignette"></div>
+    <div class="titleCredit">Baseado nos relatos de<br>meu querido amigo sobre<br>seu local de trabalho<br><span class="creditVer">v1.3</span></div>
+  </section>
+
+  <!-- ============ INTRO DA NOITE ============ -->
+  <section id="scr-night" class="screen hidden">
+    <div class="nightWrap">
+      <div class="nightNum" id="nightNum">NOITE 1</div>
+    </div>
+  </section>
+
+  <!-- ============ PAUSA ============ -->
+  <section id="scr-pause" class="screen hidden">
+    <div class="panelBox">
+      <h2>PAUSADO</h2>
+      <div class="menu">
+        <button class="btn" data-act="resume">VOLTAR</button>
+        <button class="btn" data-act="help">COMO JOGAR</button>
+        <button class="btn" data-act="quit">SAIR PARA O MENU</button>
+      </div>
+      <div class="foot">Dica: ligações e câmeras gastam a bateria do celular.</div>
+    </div>
+  </section>
+
+  <!-- ============ GAME OVER ============ -->
+  <section id="scr-over" class="screen hidden">
+    <div class="panelBox dark">
+      <h2 class="red">VOCÊ MORREU</h2>
+      <div class="overSub" id="overSub">Noite 1 &middot; 3:00 AM</div>
+      <div class="menu">
+        <button class="btn" data-act="retry">TENTAR DE NOVO</button>
+        <button class="btn" data-act="quit">MENU</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ VITÓRIA ============ -->
+  <section id="scr-win" class="screen hidden">
+    <div class="panelBox">
+      <h2 class="gold">6:00 AM</h2>
+      <div class="winSub" id="winSub">Você sobreviveu à Noite 1</div>
+      <div class="menu">
+        <button class="btn" data-act="next">PRÓXIMA NOITE</button>
+        <button class="btn" data-act="quit">MENU</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FINAL ============ -->
+  <section id="scr-end" class="screen hidden">
+    <canvas id="endCanvas" width="960" height="540"></canvas>
+    <div class="endTitle" id="endTitle"></div>
+    <div class="endCaption" id="endCaption"></div>
+  </section>
+
+  <!-- ============ TURNO INCOMPLETO ============ -->
+  <section id="scr-fail" class="screen hidden">
+    <div class="panelBox dark">
+      <h2 class="gold">6:00 AM</h2>
+      <div class="failTitle">TURNO INCOMPLETO</div>
+      <div class="failSub" id="failSub">Você sobreviveu, mas os pedidos não ficaram prontos.</div>
+      <div class="menu">
+        <button class="btn" data-act="retry">TENTAR DE NOVO</button>
+        <button class="btn" data-act="quit">MENU</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ NOITE PERSONALIZADA ============ -->
+  <section id="scr-custom" class="screen hidden">
+    <div class="panelBox custBox">
+      <h2 class="custTitle">NOITE PERSONALIZADA</h2>
+      <div class="custSub">Ajuste a agressividade de cada amigo — 0 desativa, 20 é o máximo</div>
+      <div class="custGrid" id="custGrid"></div>
+      <div class="custPresetRow">
+        <span class="presetLbl">PRESET</span>
+        <span id="custPreset" class="preset">0 / 0 / 0 / 0</span>
+      </div>
+      <div class="menu row">
+        <button class="btn" data-act="cust-start">COMEÇAR</button>
+        <button class="btn small" data-act="cust-max">20/20/20/20</button>
+        <button class="btn small" data-act="cust-reset">ZERAR</button>
+        <button class="btn small" data-act="quit">VOLTAR</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ AJUDA ============ -->
+  <section id="scr-help" class="screen hidden">
+    <div class="panelBox wide helpBox">
+      <h2>COMO JOGAR</h2>
+      <div class="helpCols">
+        <div>
+          <h3>Seu turno</h3>
+          <p>Você é <b>Jairo</b>, o impressor. Seu pai liga: atenda no <b>toque do celular</b> (clique ou Espaço) e ouça o objetivo. São 6 horas, 50 segundos cada — complete a <b>meta de pedidos</b> e sobreviva até as 6 AM.</p>
+          <h3>Trabalhar</h3>
+          <p>Cada pedido tem 2 etapas e indica a impressora (offset, digital ou UV). Gire até ela e segure <b>E</b>. Depois leve para a <b>expedição</b> (parede direita) e segure <b>E</b>. O que sobrar acumula para a noite seguinte.</p>
+          <h3>Celular e energia</h3>
+          <p>Só o celular gasta bateria: câmeras e ligações. Se chegar a 0%, não há mais ligações nem avisos dos amigos — mas a <b>gráfica continua normal</b>.</p>
+        </div>
+        <div>
+          <h3>As duas portas</h3>
+          <p>Porta na <b>frente</b> (S) e porta nos <b>fundos</b> (L). Dá para clicar nos botões de luz desenhados na parede. As portas não fecham.</p>
+          <h3>Dar atenção</h3>
+          <p>Amigo na porta? <b>Olhe para ele</b> (centralize a porta) e <b>segure E</b> até a barra encher: ele recua e dá uma <b>volta pela gráfica</b> antes de voltar a procurar você.</p>
+          <h3>Câmeras</h3>
+          <p><b>C</b> ou <b>CÂMERAS</b> abre o mapa; clique no cômodo para ver a câmera dele; <b>C</b> de novo fecha.</p>
+          <h3>Os amigos</h3>
+          <p>Ligam avisando (após a ligação do pai) e percorrem a gráfica até as portas: <b>Akira</b> e <b>Leo</b> pela porta da frente, <b>Re</b> pelos fundos, <b>Hori</b> age quando você não olha.</p>
+          <h3>Controles</h3>
+          <p><b>Arrastar</b> / <b>← →</b> gira &nbsp;·&nbsp; <b>E</b> trabalha &nbsp;·&nbsp; <b>S</b>/<b>L</b> luzes &nbsp;·&nbsp; <b>C</b> câmeras &nbsp;·&nbsp; <b>Esc</b> pausa &nbsp;·&nbsp; <b>M</b> mudo</p>
+        </div>
+      </div>
+      <div class="menu"><button class="btn" data-act="help-back">VOLTAR</button></div>
+    </div>
+  </section>
+</div>
+
+<script src="js/audio.js?v=161"></script>
+<script src="js/art-core.js?v=161"></script>
+<script src="js/art-room360.js?v=161"></script>
+<script src="js/game.js?v=161"></script>
+</body>
+</html>
