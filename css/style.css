@@ -162,7 +162,8 @@ html,body{
 /* sobe da zona de sobreposição quando há ligação/telefone na tela */
 #doorAtten.phoneOffset{bottom:calc(var(--u)*320)}
 #daName{font-family:"Courier New",monospace;font-size:calc(var(--u)*17);letter-spacing:.2em;color:#ffd9a0;text-shadow:0 0 calc(var(--u)*12) rgba(255,180,60,.55)}
-#daHint{font-size:calc(var(--u)*13);letter-spacing:.14em;color:#93a1ab;margin-top:calc(var(--u)*2)}
+#daHint{font-size:calc(var(--u)*14);letter-spacing:.12em;color:#a8b7c0;margin-top:calc(var(--u)*2);max-width:calc(var(--u)*460);white-space:normal;line-height:1.5;margin-left:auto;margin-right:auto}
+#daHint b{color:#ffd479}
 #daBar{width:calc(var(--u)*230);height:calc(var(--u)*11);margin:calc(var(--u)*5) auto 0;border:calc(var(--u)*2) solid rgba(255,214,150,.6);background:rgba(0,0,0,.65);padding:calc(var(--u)*1)}
 #daFill{height:100%;width:0;background:linear-gradient(90deg,#ffd479,#ffb648);transition:width .1s linear}
 #doorAtten.facing #daName{color:#fff}
