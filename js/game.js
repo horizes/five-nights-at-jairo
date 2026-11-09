@@ -37,7 +37,7 @@ const GAME = (function () {
     6: { hori: 8, akira: 14, leo: 14, re: 13 }
   };
 
-  const QUOTA = { 1: 4, 2: 5, 3: 5, 4: 6, 5: 7, 6: 7, 7: 6 };
+  const QUOTA = { 1: 4, 2: 5, 3: 5, 4: 6, 5: 7, 6: 8, 7: 6 };
 
   /* curva de dificuldade da campanha:
      1 = tutorial/fácil · 2-3 = médias · 4-5 = bem difíceis · 6 = super difícil */
