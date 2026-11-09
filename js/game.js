@@ -14,7 +14,7 @@ const GAME = (function () {
   const VW = ART.VW, VH = ART.VH;
   const HOUR = 50;                 // segundos por hora
   const NIGHT_LEN = HOUR * 6;
-  const DRAIN = 1 / 6.2;            // % de bateria por segundo com uso 1 (bateria bem mais limitada)
+  const DRAIN = 1 / 3.8;            // % de bateria por segundo com uso 1 (bateria bem mais curta)
   const TAU = Math.PI * 2;
   const wrap = a => ART.ROOM.wrap(a);
   const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
