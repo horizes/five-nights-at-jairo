@@ -1716,6 +1716,75 @@ function shuffle(a) {
       });
     });
 
+    /* ---------- cursor customizado ---------- */
+    (function bindCursor() {
+      const cc = $('cc');
+      if (!cc) return;
+      const ccGlyph = cc.querySelector('.ccGlyph');
+      const setState = (s, glyph) => {
+        cc.className = s;                       // 'st' | 'work' | 'door' | 'cam' | 'light' | 'menu' | 'phone' | 'out'
+        if (ccGlyph) ccGlyph.textContent = glyph == null ? '' : glyph;
+      };
+      const moveCc = (e) => {
+        cc.style.transform = 'translate3d(' + e.clientX + 'px,' + e.clientY + 'px,0)';
+      };
+      const pickState = (e) => {
+        const t = e.target;
+        // botões e controles principais → cursor de menu
+        if (t && t.closest && t.closest('button, a, input, select, .camRoom, #camToggle, #answerBtn')) {
+          if (t.id === 'answerBtn' || (t.closest && t.closest('#answerBtn'))) return ['phone', 'ATENDER'];
+          return ['menu', ''];
+        }
+        if (screen === 'play' && S && !S.jumping && !S.ended) {
+          if (S.viewMode === 'camera') return ['cam', 'CÂMERAS'];
+          const p = canvasPoint(e);
+          // botões de luz das portas
+          for (const side of ['F', 'B']) {
+            const D = ART.ROOM.doors[side];
+            const px = ART.ROOM.screenX(D.angle, S.yaw) + D.btn;
+            if (px > -90 && px < VW + 90 && Math.abs(p.x - px) <= 54 && Math.abs(p.y - D.by[1]) <= 54) {
+              return ['light', 'LUZ'];
+            }
+          }
+          // estação de trabalho necessária no passo atual
+          const job = S.job;
+          if (job && !job.locked && !job.done) {
+            const key = job.step === 'print' ? (job.printer || 'print1') : 'pack';
+            const st = ART.ROOM.stations[key];
+            if (st) {
+              const scx = ART.ROOM.screenX(st.angle, S.yaw);
+              const near = Math.abs(wrap(st.angle - S.yaw)) < (key === 'pack' ? 0.40 : 0.28)
+                && Math.abs(p.x - scx) < 220 && p.y > 380;
+              if (near) return ['work', job.step === 'print' ? 'IMPRIMIR' : 'EMBALAR'];
+            }
+          }
+          // amigo à vista na porta da sala
+          const doorHere = (S.doors.F.char && !S.doors.F.leaving) ? 'F' : (S.doors.B.char && !S.doors.B.leaving) ? 'B' : null;
+          if (doorHere) {
+            const ang = doorHere === 'F' ? 0 : Math.PI;
+            if (Math.abs(wrap(ang - S.yaw)) < 0.55) {
+              return ['door', 'SEGURAR E'];
+            }
+          }
+          return ['st', ''];
+        }
+        // menus fora do jogo
+        if (t && t.closest && t.closest('.screen, .panelBox')) return ['menu', ''];
+        return ['st', ''];
+      };
+      stage.addEventListener('pointermove', (e) => {
+        moveCc(e);
+        const picked = pickState(e);
+        setState(picked[0], picked[1]);
+      });
+      stage.addEventListener('pointerdown', () => { cc.classList.add('grab'); });
+      const endGrab = () => cc.classList.remove('grab');
+      stage.addEventListener('pointerup', endGrab);
+      stage.addEventListener('pointercancel', endGrab);
+      stage.addEventListener('pointerleave', () => setState('out', ''));
+      stage.addEventListener('pointerenter', () => setState('st', ''));
+    })();
+
     buildCustom();
   }
 

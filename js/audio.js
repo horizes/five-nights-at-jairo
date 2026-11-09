@@ -161,10 +161,12 @@ const AUDIO = (function () {
       }
     },
     knockDoor() {
+      // pancada de porta industrial: surda, oca, grave — muito diferente do estalo nítido das tarefas
       if (!ok()) return;
       for (let i = 0; i < 3; i++) {
-        burst({ dur: 0.15, freq: 135, q: 1.1, gain: 0.8, type: 'lowpass', brown: true, delay: i * 0.26 });
-        tone({ freq: 62, to: 38, dur: 0.18, gain: 0.5, type: 'sine', delay: i * 0.26 });
+        burst({ dur: 0.22, freq: 420, q: 2.4, gain: 0.55, type: 'bandpass', brown: true, delay: i * 0.30 });
+        tone({ freq: 95, to: 52, dur: 0.28, gain: 0.46, type: 'sine', delay: i * 0.30 });
+        burst({ dur: 0.05, freq: 1650, q: 4.0, gain: 0.17, type: 'highpass', delay: i * 0.30 + 0.004 }); // estalo da batida
       }
     },
     doorCreak() {

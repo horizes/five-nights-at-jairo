@@ -422,7 +422,43 @@ html,body{
 #stage.jumping #answerBtn,
 #stage.jumping #objective,
 #stage.jumping #doorAtten,
-#stage.jumping #subtitle{
+#stage.jumping #subtitle,
+#stage.jumping #cc{
   opacity:0 !important;
   pointer-events:none !important;
 }
+
+/* ============ cursor customizado ============ */
+#stage, #stage *{cursor:none}
+#cc{position:fixed;left:0;top:0;z-index:40;pointer-events:none;opacity:0;transition:opacity .14s ease}
+#stage:hover #cc{opacity:1}
+#cc.out{opacity:0 !important}
+#cc.grab .ccRing{transform:scale(1.55);border-color:#ffd479}
+.ccRing{position:absolute;left:-17px;top:-17px;width:34px;height:34px;border-radius:50%;
+  border:2.5px solid rgba(165,225,255,.85);box-shadow:0 0 13px rgba(165,225,255,.26);
+  transition:all .14s ease}
+.ccDot{position:absolute;left:-2.5px;top:-2.5px;width:5px;height:5px;border-radius:50%;
+  background:#ffd479;box-shadow:0 0 9px #ffc861;transition:all .14s ease}
+.ccGlyph{position:absolute;left:0;top:-27px;transform:translateX(-50%);
+  font-size:12px;font-weight:700;letter-spacing:.18em;color:#cfeeff;text-shadow:0 0 9px rgba(160,220,255,.5);
+  transition:all .14s ease;white-space:nowrap}
+#cc.st .ccRing{border-color:rgba(165,225,255,.85);box-shadow:0 0 13px rgba(165,225,255,.26)}
+#cc.work .ccRing{border-color:#5cff8f;box-shadow:0 0 16px rgba(92,255,143,.45)}
+#cc.work .ccGlyph{color:#c9ffd6;text-shadow:0 0 9px rgba(90,255,150,.55)}
+#cc.work .ccDot{background:#8cffab}
+#cc.door .ccRing{border-color:#ff6a4d;box-shadow:0 0 18px rgba(255,100,60,.5);width:46px;height:46px;left:-23px;top:-23px}
+#cc.door .ccGlyph{color:#ffb3a0;text-shadow:0 0 9px rgba(255,110,70,.6)}
+#cc.door .ccDot{background:#ff8a70}
+#cc.cam .ccRing{border-color:#6bd6ff;box-shadow:0 0 16px rgba(107,214,255,.42)}
+#cc.cam .ccGlyph{color:#bdeaff;text-shadow:0 0 9px rgba(120,220,255,.55)}
+#cc.cam .ccDot{background:#8ce6ff}
+#cc.light .ccRing{border-color:#ffe8a0;box-shadow:0 0 18px rgba(255,230,130,.6)}
+#cc.light .ccGlyph{color:#fff3c0;text-shadow:0 0 9px rgba(255,230,130,.65)}
+#cc.light .ccDot{background:#fff3b8}
+#cc.menu .ccRing{border-color:#fff;box-shadow:0 0 12px rgba(255,255,255,.35);width:22px;height:22px;left:-11px;top:-11px}
+#cc.menu .ccGlyph{color:#fff;text-shadow:0 0 9px rgba(255,255,255,.6)}
+#cc.menu .ccDot{background:#fff}
+#cc.phone .ccRing{border-color:#ffd479;box-shadow:0 0 18px rgba(255,212,121,.55);animation:ccPulse .8s infinite}
+@keyframes ccPulse{50%{box-shadow:0 0 26px rgba(255,214,124,.7)}}
+#cc.phone .ccGlyph{color:#ffe9a8;text-shadow:0 0 9px rgba(255,212,121,.6)}
+#cc.phone .ccDot{background:#ffd479}
