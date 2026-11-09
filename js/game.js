@@ -62,12 +62,12 @@ const FRIEND_LINES = {
   hori: ['Jairo, é o Hori.', 'Estou a caminho. Me espera.'],
   re: ['Fala, Jairo. É a Re.', 'Vou aparecer aí. Não fecha a porta na minha cara.']
 };
-/* falas de balão durante a atenção (por enquanto os balões ficam VAZIOS — só aparece o balão) */
+/* falas de balão durante a atenção (aparecem aleatoriamente, com limite por noite) */
 const FRIEND_SPEECH = {
-  akira: [],
-  leo: [],
-  hori: [],
-  re: []
+  akira: ['Eu como minha própria bosta'],
+  leo: ['Robert Plant'],
+  hori: ['Vey'],
+  re: ['Me vê um copão aí']
 };
 function pickSpeechLine(id) {
   const lines = FRIEND_SPEECH[id] || [];

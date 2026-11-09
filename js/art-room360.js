@@ -699,7 +699,7 @@
         A.poly(g, [[tailX - 13, byBottom - 6], [tailX + 13, byBottom - 6], [headX + side * 6, byBottom + 26]]); g.fill();
         g.strokeStyle = 'rgba(10,10,12,.85)'; g.lineWidth = 3.5;
         g.beginPath(); g.moveTo(tailX - 13, byBottom - 6); g.lineTo(headX + side * 6, byBottom + 26); g.lineTo(tailX + 13, byBottom - 6); g.stroke();
-        // texto (por enquanto os balões ficam vazios)
+        // texto da fala (balão só aparece com chance aleatória)
         if (text) {
           g.fillStyle = '#161616';
           g.textAlign = 'center';
