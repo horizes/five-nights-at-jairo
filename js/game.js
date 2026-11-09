@@ -511,6 +511,23 @@ function shuffle(a) {
     AUDIO.phoneEnd(); // sininho de despedida
   }
 
+  /* avança apenas a linha atual da ligação de amigo (mesma lógica da ligação do pai) */
+  function advanceFriendCall() {
+    if (!S || !S.friendCall) return;
+    const c = S.friendCall;
+    c.i++;
+    c.shown = false;
+    if (c.i >= c.lines.length) { endFriendCall(); return; }
+    const line = c.lines[c.i];
+    const nm = (ART.CHARS[c.id] && ART.CHARS[c.id].name) || c.id;
+    $('subtitleText').textContent = nm + ': ' + line;
+    $('subtitle').classList.remove('hidden');
+    c.shown = true;
+    c.t = 0;
+    c.dur = Math.max(2.5, Math.min(6, line.length * 0.06));
+    AUDIO.phoneBlip(line.length);
+  }
+
   function updateFriendCall(dt) {
     if (!S || !S.friendCall) return;
     const c = S.friendCall;
@@ -1506,7 +1523,7 @@ function shuffle(a) {
         advancePhone();
       } else if (screen === 'play' && S && S.friendCall && !S.friendCall.ringing) {
         e.stopPropagation();
-        endFriendCall();
+        advanceFriendCall();
       }
     });
 
@@ -1597,6 +1614,8 @@ function shuffle(a) {
           S.friendCall.ringing = false;
           AUDIO.ring(false);
           const ab = $('answerBtn'); if (ab) ab.classList.add('hidden');
+        } else if (S.friendCall && !S.friendCall.ringing) {
+          advanceFriendCall();
         }
         return;
       }
