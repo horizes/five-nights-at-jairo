@@ -1410,7 +1410,7 @@ function shuffle(a) {
         d.chargeTimer = (d.chargeTimer || 0) + dt;
         const depleted = !!d.depleted || (d.charge == null ? 1 : d.charge) <= 0;
         const need     = depleted ? 2.0 : 1.2;                       // de 0 demora mais para começar a voltar
-        const speed    = depleted ? 1 / 16 : 1 / 6;                 // travar até 100% demora ~16 s
+        const speed    = depleted ? 1 / 7 : 1 / 6;                  // de 0: 2s + 7s = 9s total até o 100%
         if (d.chargeTimer > need) {
           d.charge = Math.min(1, (d.charge == null ? 1 : d.charge) + dt * speed);
           if (d.charge >= 1) { d.chargeState = 'full'; d.depleted = false; }   // 100%: destrava
