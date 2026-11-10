@@ -236,10 +236,13 @@ const AUDIO = (function () {
       tone({ freq: 150, to: 62, dur: 0.16, gain: 0.3, type: 'sine' });
       burst({ dur: 0.07, freq: 2300, q: 2.4, gain: 0.16, delay: 0.19 });
     },
-    // pool de 6 músicas (MIDI) — atrai amigos pelas câmeras, tocadas com guitarra sintetizada
+    // pool de 7 músicas (MIDI) — atrai amigos pelas câmeras; nunca repete a mesma sequência seguida
     lure() {
       if (!ok()) return;
-      playLureSong((Math.random() * LURE_SONGS.length) | 0);
+      let idx;
+      do { idx = (Math.random() * LURE_SONGS.length) | 0; } while (idx === lastLure);
+      lastLure = idx;
+      playLureSong(idx);
       // leve estática por baixo, como alto-falante distante da gráfica
       burst({ dur: 1.1, freq: 1000, q: 1.1, gain: 0.045, type: 'bandpass', brown: true, delay: 0.05 });
     },
@@ -588,15 +591,17 @@ const AUDIO = (function () {
   function unlock() { if (frozen) return; if (ac && ac.state === 'suspended') ac.resume(); }
 
   /* ---------- guitarra sintetizada (Karplus–Strong) + pool de músicas ---------- */
-  /* 1.mid a 6.mid decodificados (tempo 365854 µs/q, divisão 96 ticks/q → ~164 BPM) */
+  /* 1.mid a 7.mid decodificados (tempo 365854 µs/q, divisão 96 ticks/q → ~164 BPM) */
   const LURE_SONGS = [
     [ [0, .274, 47], [0, .274, 52], [.366, .183, 47], [.366, .183, 52], [.549, .183, 47], [.549, .183, 52] ],   // 1.mid — power-chord B2+E3 (x3)
     [ [0, .183, 69], [.183, .183, 68], [.366, .366, 64], [.732, .366, 64] ],                               // 2.mid — A4 G#4 E4 E4
     [ [0, .183, 68], [.183, .183, 69], [.366, .366, 64], [.732, .366, 64] ],                               // 3.mid — G#4 A4 E4 E4
     [ [0, .274, 49], [0, .274, 54], [.366, .183, 49], [.366, .183, 54], [.549, .183, 49], [.549, .183, 54] ], // 4.mid — power-chord C#3+F#3 (x3)
     [ [0, .183, 69], [.183, .183, 71], [.366, .366, 64], [.732, .366, 64] ],                               // 5.mid — A4 B4 E4 E4
-    [ [0, .183, 71], [.183, .183, 69], [.366, .366, 64], [.732, .366, 64] ]                                // 6.mid — B4 A4 E4 E4
+    [ [0, .183, 71], [.183, .183, 69], [.366, .366, 64], [.732, .366, 64] ],                                // 6.mid — B4 A4 E4 E4
+    [ [0, .183, 69], [.183, .183, 71], [.366, .366, 68], [.732, .366, 64] ]                                // 7.mid — A4 B4 G#4 E4
   ];
+  let lastLure = -1;                                             // impede repetir a mesma música duas vezes seguidas
   const ksCache = {};
   function guitarBuffer(freq) {
     const key = Math.round(freq * 100);
@@ -607,7 +612,7 @@ const AUDIO = (function () {
     const buf = ac.createBuffer(1, len, sr);
     const out = buf.getChannelData(0);
     for (let i = 0; i < N; i++) out[i] = Math.random() * 2 - 1;    // ataque "dedilhada"
-    const decay = 0.996;                                           // decaimento da corda
+    const decay = 0.995;                                           // decaimento da corda (elétrica, mais seca)
     for (let i = N; i < len; i++) {
       const a = out[i - N], b = out[i - N + 1] === undefined ? a : out[i - N + 1];
       out[i] = (a + b) * 0.5 * decay;                              // média = lowpass da corda
@@ -615,16 +620,33 @@ const AUDIO = (function () {
     ksCache[key] = buf;
     return buf;
   }
+  /* curva de distorção (soft-clip por tanh, estilo amp de válvula) */
+  let distCurve = null;
+  function getDistCurve() {
+    if (distCurve) return distCurve;
+    const n = 2048, c = new Float32Array(n), k = 4.5;
+    for (let i = 0; i < n; i++) {
+      const x = (i * 2) / (n - 1) - 1;
+      c[i] = Math.tanh(k * x) / Math.tanh(k);
+    }
+    distCurve = c;
+    return distCurve;
+  }
   function guitarNote(midi, when, gain, pan) {
     if (!ok()) return;
     const freq = 440 * Math.pow(2, (midi - 69) / 12);
     let src;
     try { src = ac.createBufferSource(); src.buffer = guitarBuffer(freq); } catch (e) { return; }
+    // cadeia elétrica: pré-drive → WaveShaper (distorção) → filtro de corpo (lowpass) → graves limpos (highpass)
+    const drive = ac.createGain(); drive.gain.value = 2.5;
+    const shaper = ac.createWaveShaper(); shaper.curve = getDistCurve(); shaper.oversample = '2x';
+    const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 3400; lp.Q.value = 0.8;
+    const hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 90; hp.Q.value = 0.7;
     const g = ac.createGain();
     g.gain.setValueAtTime(0.0001, when);
-    g.gain.linearRampToValueAtTime(gain, when + 0.006);
+    g.gain.linearRampToValueAtTime(gain, when + 0.005);
     g.gain.exponentialRampToValueAtTime(0.0001, when + 1.55);
-    src.connect(g);
+    src.connect(drive); drive.connect(shaper); shaper.connect(lp); lp.connect(hp); hp.connect(g);
     if (pan != null && ac.createStereoPanner) {
       const p = ac.createStereoPanner(); p.pan.value = pan; g.connect(p); p.connect(master);
     } else {
@@ -633,7 +655,7 @@ const AUDIO = (function () {
     src.start(when);
     src.stop(when + 1.6);
   }
-  /* toca a música (índice 0..5) com som de guitarra */
+  /* toca a música (índice 0..6) com som de guitarra elétrica distorcida */
   function playLureSong(idx) {
     if (!ok()) return;
     const song = LURE_SONGS[idx];
@@ -641,7 +663,7 @@ const AUDIO = (function () {
     const t0 = ac.currentTime + 0.03;
     song.forEach(([t, dur, midi]) => {
       const pan = (Math.random() - 0.5) * 0.5;               // leve variação estéreo por nota
-      guitarNote(midi, t0 + t, dur > 0.3 ? 0.5 : 0.42, pan);
+      guitarNote(midi, t0 + t, dur > 0.3 ? 0.55 : 0.48, pan);
     });
   }
 
