@@ -212,13 +212,23 @@ const AUDIO = (function () {
       }
     },
     stepFar(pan, vol) {
-      // um único passo ecoando no corredor; vol escala com a proximidade
+      // um passo de bota pesada no corredor — calcanhar surdo, salto seco, eco baixo corredor a dentro
       if (pan == null || isNaN(pan)) pan = 0;
       pan = Math.max(-0.9, Math.min(0.9, pan));
       if (!ok()) return;
       const v = vol == null ? 0.4 : Math.max(0.05, Math.min(1, vol));
-      burst({ dur: 0.17, freq: 155, q: 1.5, gain: 0.34 * v, type: 'lowpass', brown: true, delay: 0, pan });
-      tone({ freq: 47, to: 31, dur: 0.19, gain: 0.24 * v, delay: 0.012, pan });
+      // alterna levemente de lado cada passo — caminhada humana, não metrônomo
+      const side = walkStepAlt ? -0.13 : 0.13;
+      walkStepAlt = !walkStepAlt;
+      const p = Math.max(-0.95, Math.min(0.95, pan + side));
+      const pitch = 0.92 + Math.random() * 0.16;               // variação natural de tom
+      // calcanhar: grave surdo de couro no concreto
+      burst({ dur: 0.11, freq: 150 * pitch, q: 1.7, gain: 0.42 * v, type: 'lowpass', brown: true, pan: p });
+      // estalo seco do salto no piso
+      burst({ dur: 0.045, freq: 620 * pitch, q: 3.4, gain: 0.30 * v, type: 'bandpass', delay: 0.012, pan: p });
+      tone({ freq: 58 * pitch, to: 40, dur: 0.13, gain: 0.26 * v, pan: p });
+      // eco esmaecido do corredor
+      burst({ dur: 0.3, freq: 210 * pitch, q: 2.0, gain: 0.075 * v, type: 'lowpass', brown: true, delay: 0.17, pan: p });
     },
     doorCreak() {
       if (!ok()) return;
@@ -615,6 +625,7 @@ const AUDIO = (function () {
     [ [0, .183, 69], [.183, .183, 71], [.366, .366, 68], [.732, .366, 64] ]                                // 7.mid — A4 B4 G#4 E4
   ];
   let lastLure = -1;                                             // última música tocada (sacola não repete até acabar)
+  let walkStepAlt = false;                                       // alterna o passo esquerda/direita
   let lureBag = [];
   /* caixa de música: senoides parciais inharmônicas com decaimento lento e sutil */
   const BELL_PARTIALS = [ { r: 1.0, g: 1.00 }, { r: 2.76, g: 0.42 }, { r: 5.40, g: 0.16 }, { r: 8.93, g: 0.06 } ];
