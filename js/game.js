@@ -49,9 +49,20 @@ const GAME = (function () {
     5: { mult: 1.20, ai: 1.70, patience: 4.0,  atten: 3.5, decay: 2.5, gap: 10 },
     6: { mult: 1.25, ai: 1.85, patience: 3.5,  atten: 4.0, decay: 3.0, gap: 7  }
   };
+  /* aceita frações: usado pela noite personalizada (interpola a curva da campanha) */
   function diffOf(night) {
-    const n = night | 0;
-    return DIFF[n] || DIFF[6];
+    const n = Math.max(1, Math.min(6, +night || 1));
+    const lo = Math.floor(n), hi = Math.ceil(n);
+    if (lo === hi) return DIFF[lo];
+    const f = n - lo, a = DIFF[lo], b = DIFF[hi];
+    return {
+      mult:     a.mult     + (b.mult     - a.mult)     * f,
+      ai:       a.ai       + (b.ai       - a.ai)       * f,
+      patience: a.patience + (b.patience - a.patience) * f,
+      atten:    a.atten    + (b.atten    - a.atten)    * f,
+      decay:    a.decay    + (b.decay    - a.decay)    * f,
+      gap:      a.gap      + (b.gap      - a.gap)      * f
+    };
   }
 const PRINTERS = ['print1', 'print2', 'print3'];
 let lastPrinter = null;
@@ -131,10 +142,10 @@ function shuffle(a) {
   // dificuldade da noite multiplica os tempos (noites avançadas pedem mais do trabalhador)
   function nightJobMult(night, levels) {
     if ((night | 0) >= 7) {
-      const avg = ['hori', 'akira', 'leo', 're'].reduce((a, k) => a + (((levels || {})[k]) | 0), 0) / 4;
-      return 1 + (avg / 20) * 0.45;             // personalizada: 1.0 … 1.45 (trabalho mais pesado com amigos mais agressivos)
+      const avg = ['hori', 'akira', 'leo', 're'].reduce((a, k) => a + Math.max(0, Math.min(20, ((levels || {})[k]) | 0)), 0) / 4;
+      return diffOf(1 + (avg / 20) * 5).mult;      // personalizada: interpola a curva da campanha (1,00 … 1,25)
     }
-    return diffOf(night).mult;                     // campanha: curva por noite (1,00 … 1,45)
+    return diffOf(night).mult;                     // campanha: curva por noite (1,00 … 1,25)
   }
 
   /* ---------------- ligações do pai ---------------- */
@@ -459,7 +470,7 @@ function shuffle(a) {
   /* tempo entre a ligação e a chegada do amigo — diminui conforme a noite avança (e conforme o nível, na personalizada) */
   function arrivalGapFor(id) {
     const night = S.night | 0;
-    if (night >= 7) return Math.max(6, 19 - customDiff(id) * 10);   // nível 20 → ~9s
+    if (night >= 7) return diffOf(customEffNight(id)).gap;     // nível 0 → 19s · nível 20 → 7s
     return diffOf(night).gap;                                             // campanha: diminui a cada noite (19 → 7)
   }
 
@@ -710,27 +721,31 @@ function shuffle(a) {
   /* ---------------- IA ---------------- */
   function castHas(id) { return S.cast && S.cast.indexOf(id) !== -1; }
   function aiSpeed(night) { return Math.min(2.2, diffOf(night).ai); }
-  /* dificuldade individual (0..1) — usada na noite personalizada (níveis do menu) */
+  /* dificuldade individual (0..1) — usada na noite personalizada (níveis do menu).
+     a escala espelha a campanha: nível 0 ≈ noite 1 (fácil) … nível 20 ≈ noite 6 (brutal) */
   function customDiff(id) {
     if (!S || (S.night | 0) < 7) return 0;
     return clamp(((S.levels || {})[id] | 0), 0, 20) / 20;
   }
+  function customEffNight(id) { return 1 + customDiff(id) * 5; }   // 1.0 … 6.0 (fração da campanha)
+  function avgCustomEffNight() {
+    const lv = (S && S.levels) || {};
+    let sum = 0; ['hori', 'akira', 'leo', 're'].forEach(k => { sum += clamp((lv[k] | 0), 0, 20); });
+    return 1 + (sum / 80) * 5;                                     // média do elenco → 1.0 … 6.0
+  }
   function interval(id) {
     const base = { hori: 10, akira: 12, leo: 12.5, re: 8.5 }[id] || 11;
-    const ai = (S.night | 0) >= 7 ? (0.55 + customDiff(id) * 1.75) : aiSpeed(S.night);
+    const ai = (S.night | 0) >= 7 ? diffOf(customEffNight(id)).ai : aiSpeed(S.night);
     return Math.max(1.6, base / ai) * (0.75 + Math.random() * 0.6);
   }
   function doorPatience(night, id) {
-    if ((night | 0) >= 7 && id) {
-      const d = customDiff(id);
-      return Math.max(4.4, 9.5 - d * 4.3);      // nível 0 → 9.5s · nível 20 → 5.2s
-    }
-    return diffOf(night).patience;                    // campanha: curva por noite (10,0s → 3,0s)
+    if ((night | 0) >= 7 && id) return diffOf(customEffNight(id)).patience;  // nível 0 → 10s · nível 20 → 3,5s
+    return diffOf(night).patience;                    // campanha: curva por noite (10,0s → 3,5s)
   }
-  function attenTime(night) { return (night | 0) >= 7 ? 1.5 + (night - 1) * 0.55 : diffOf(night).atten; }
+  function attenTime(night, id) { return (night | 0) >= 7 ? diffOf(id ? customEffNight(id) : avgCustomEffNight()).atten : diffOf(night).atten; }
   function attenDecay(night, id) {
-    if ((night | 0) >= 7 && id) return 1.15 + customDiff(id) * 2.35;  // nível 0 → 1.15 · nível 20 → 3.5
-    return diffOf(night).decay;                                       // campanha: curva por noite (1,2 → 3,4)
+    if ((night | 0) >= 7 && id) return diffOf(customEffNight(id)).decay;     // nível 0 → 1.2 · nível 20 → 3.0
+    return diffOf(night).decay;                                       // campanha: curva por noite (1,2 → 3,0)
   }
 
   function setCamPos(id, room) {
@@ -946,7 +961,7 @@ function shuffle(a) {
       return span / doorPatience(S.night, id);         // campanha 10s→3,5s · custom 9,5s→5,2s conforme o ajuste
     })();
     d.attenNeed = (S.night | 0) >= 7
-      ? 0.9 + Math.random() * 1.6 + customDiff(id) * 1.35   // amigos mais agressivos exigem mais atenção
+      ? 0.9 + Math.random() * 1.6 + (customEffNight(id) - 1) * 0.12   // igual à campanha na "noite" equivalente
       : 0.9 + Math.random() * 1.6 + (S.night - 1) * 0.12;   // cada aparição exige atenção aleatória
     // porta avisa por som: passos ecoando no corredor (estéreo pela posição da porta em relação a você)
     const rel = wrap(ART.ROOM.doors[side].angle - S.yaw);
@@ -966,7 +981,7 @@ function shuffle(a) {
     const attending = watching && S.holdE && eTarget() === 'door';
     if (d.atten == null) d.atten = 0;
     if (attending) {
-      d.atten = Math.min(1, d.atten + dt / (d.attenNeed || attenTime(S.night)));
+      d.atten = Math.min(1, d.atten + dt / (d.attenNeed || attenTime(S.night, id)));
       // balão de fala: evento semi-raro — poucas vezes por noite no máximo
       if (d.bubbleT <= 0 && (S.bubbleCount || 0) < 5 && Math.random() < dt * 0.10) {
         S.bubbleCount = (S.bubbleCount || 0) + 1;
