@@ -167,6 +167,13 @@ const AUDIO = (function () {
       burst({ dur: 0.04, freq: 4200, q: 1, gain: 0.45 });
       tone({ freq: 130, dur: 0.25, gain: 0.16, type: 'sawtooth' });
     },
+    lightDie() {
+      // "bzzt" — a lâmpada apagando sozinha quando a carga acaba
+      if (!ok()) return;
+      tone({ freq: 950, to: 120, dur: 0.14, gain: 0.18, type: 'square' });
+      burst({ dur: 0.05, freq: 750, q: 2.2, gain: 0.3, delay: 0.02 });
+      tone({ freq: 62, to: 36, dur: 0.22, gain: 0.24, delay: 0.09 });
+    },
     step() { burst({ dur: 0.16, freq: 180, q: 1.5, gain: 0.35, type: 'lowpass', brown: true }); },
     knock() {
       for (let i = 0; i < 3; i++) {

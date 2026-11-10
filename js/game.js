@@ -1382,6 +1382,7 @@ function shuffle(a) {
             d.chargeState = 'empty';
             d.light = false;                                  // lâmpada apaga sozinha e só volta a funcionar após recarregar
             AUDIO.lightHum(side, false);
+            if (AUDIO.lightDie) AUDIO.lightDie();             // "bzzt" da lâmpada morrendo
           } else if (d.charge < 0.35) d.chargeState = 'low';
           else d.chargeState = 'full';
         }
