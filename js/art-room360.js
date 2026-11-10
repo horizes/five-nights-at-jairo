@@ -1333,13 +1333,25 @@
     friends.forEach(fid => { if (fid !== corridorDoorFriend) drawList.push({ id: fid, door: false }); });
     if (corridorDoorFriend && corridorDoorEnter > 0.45) drawList.push({ id: corridorDoorFriend, door: true });
     if (drawList.length) {
-      // cada amigo aparece numa posição aleatória própria da sala (sorteada ao entrar)
+      // cada amigo aparece numa posição aleatória própria da sala (sorteada ao entrar);
+      // nos corredores a porta é o centro: o atacante fica na boca da passagem e os demais se afastam dela;
+      // em todos os casos, os bonecos ficam longe do canto onde o mapa cobre a vista
       drawList.forEach((item, i) => {
         const r = S.roaming && S.roaming[item.id];
-        const base = r && typeof r.slotX === 'number' ? r.slotX : ((i * 260) - 260);
-        const spot = item.door ? base * 0.32 : base;           // na porta fica perto da boca do corredor
+        const base = r && typeof r.slotX === 'number' ? r.slotX : ((i * 300) - 300);
         const phase = (item.id.charCodeAt(0) + item.id.length * 13 + 5) * 0.9;
         const wave = Math.sin(t * 1.15 + phase) * 4;
+        let spot;
+        if (corridorDoorSide) {
+          if (item.door) {
+            spot = Math.sin(t * 1.25) * 6;                                   // centrado na boca da porta
+          } else {
+            // residente: fica encostado de um lado, fora da boca da porta e longe do mapa
+            spot = (base < 0 ? -1 : 1) * (175 + (Math.abs(base) % 165));
+          }
+        } else {
+          spot = Math.max(-470, Math.min(470, base));                        // fora da área do mapa
+        }
         const cx = VW / 2 + spot + wave;
         if (item.door) {
           // no fundo do corredor, de costas, para a porta da sala
