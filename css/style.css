@@ -102,7 +102,7 @@ html,body{
   min-width:calc(var(--u)*160);box-shadow:0 0 calc(var(--u)*20) rgba(0,0,0,.6)}
 #camToggle:hover{color:#04121a;background:rgba(200,232,245,.92);border-color:#fff}
 #camBox{position:absolute;left:calc(var(--u)*12);top:calc(var(--u)*84);
-  width:calc(var(--u)*380);height:calc(var(--u)*440);pointer-events:none;z-index:6;
+  width:calc(var(--u)*380);height:calc(var(--u)*515);pointer-events:none;z-index:6;
   background:rgba(0,0,0,.38);
   border:calc(var(--u)*2) solid rgba(160,190,205,.4);
   display:block;overflow:hidden;box-shadow:0 0 calc(var(--u)*30) rgba(0,0,0,.7);
@@ -157,6 +157,24 @@ html,body{
 .camLine.hCorrTI{top:52%;left:58%;width:20%;height:2px}
 .camLine.vCorrOff{top:58%;left:50%;width:2px;height:14%}
 .camLine.vTIOff{top:38%;left:78%;width:2px;height:34%}
+
+/* botão TOCAR ÁUDIO — abaixo do mapa das câmeras */
+.camLure{position:absolute;left:calc(var(--u)*16);bottom:calc(var(--u)*12);
+  width:calc(var(--u)*348);min-height:calc(var(--u)*74);z-index:2;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(var(--u)*2);
+  font-family:"Courier New",monospace;color:#ffe9a8;
+  background:linear-gradient(180deg, rgba(28,34,40,.85) 0%, rgba(14,18,22,.9) 100%);
+  border:calc(var(--u)*2) solid rgba(255,214,150,.55);
+  padding:calc(var(--u)*8) calc(var(--u)*10);cursor:pointer;pointer-events:auto;
+  letter-spacing:.12em;text-shadow:0 0 calc(var(--u)*8) rgba(255,190,80,.35);
+  box-shadow:0 0 calc(var(--u)*18) rgba(255,180,60,.08), inset 0 0 calc(var(--u)*18) rgba(255,210,120,.10)}
+.camLure:hover:not(:disabled){background:linear-gradient(180deg, rgba(46,54,60,.95) 0%, rgba(24,28,32,.9) 100%);box-shadow:0 0 calc(var(--u)*22) rgba(255,210,110,.18)}
+.camLure .clIcon{font-size:calc(var(--u)*34);line-height:1;color:#ffd479}
+.camLure .clTxt{font-size:calc(var(--u)*17);font-weight:700;letter-spacing:.08em}
+.camLure .clSub{font-size:calc(var(--u)*10);color:#aeb8bf;letter-spacing:.02em;text-transform:none}
+.camLure[disabled]{opacity:.45;cursor:not-allowed;filter:grayscale(.6)}
+.camLure.ready .clIcon{color:#ffd479;filter:drop-shadow(0 0 calc(var(--u)*8) rgba(255,200,80,.9))}
+.camLure.cooling .clIcon{color:#8a8a8a}
 
 #doorAtten{position:absolute;left:50%;bottom:calc(var(--u)*205);transform:translateX(-50%);z-index:9;text-align:center;pointer-events:none;transition:bottom .25s ease}
 /* sobe da zona de sobreposiÃ§Ã£o quando hÃ¡ ligaÃ§Ã£o/telefone na tela */

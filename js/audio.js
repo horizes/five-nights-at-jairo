@@ -206,6 +206,14 @@ const AUDIO = (function () {
       tone({ freq: 150, to: 62, dur: 0.16, gain: 0.3, type: 'sine' });
       burst({ dur: 0.07, freq: 2300, q: 2.4, gain: 0.16, delay: 0.19 });
     },
+    // jingle de rádio (chamado de "alarme social") — atrai amigos pelas câmeras
+    lure() {
+      if (!ok()) return;
+      const melody = [659.25, 523.25, 587.33, 783.99, 880.0]; // E5 C5 D5 G5 A5
+      melody.forEach((f, i) => tone({ freq: f, dur: 0.18, gain: 0.12, type: 'square', delay: i * 0.13 }));
+      // estática por baixo, como rádio barato
+      burst({ dur: 0.85, freq: 900, q: 1.2, gain: 0.07, type: 'bandpass', brown: true, delay: 0.1 });
+    },
     slapBass() {
       // slap seco e quase acústico: triângulo grave + lowpass sem ressonância + decaimento curto
       if (!ok()) return;

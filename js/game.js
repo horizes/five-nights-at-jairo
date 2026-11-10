@@ -261,6 +261,7 @@ function shuffle(a) {
       cameras: [[], [], [], [], [], [], [], [], []],
       viewMode: 'room',
       activeCamera: 0,
+      lureCd: 0,
       friendCall: null,
       friendCallNotified: {},
       callSchedule,
@@ -309,6 +310,7 @@ function shuffle(a) {
       drag = null;
       stage.classList.remove('dragging');
     }
+    refreshLureBtn();
   }
 
   function fitStage() {
@@ -350,6 +352,7 @@ function shuffle(a) {
     if (jb) jb.classList.add('hidden'); // PEDIDOS só aparece depois do aviso
     const oc = $('objective');
     if (oc) { oc.classList.add('hidden'); oc.classList.remove('show'); }
+    refreshLureBtn();
 
     setTimeout(() => {
       if (screen !== 'night' || !S) return;
@@ -737,6 +740,53 @@ function shuffle(a) {
     }
     if (S.roaming) S.roaming[id] = null;
     if (S.chars[id]) { /* mantém pos */ }
+  }
+
+  /* câmera reproduz áudio atraindo amigos das salas adjacentes para a sala atual */
+  function lureToCamera() {
+    if (!S || S.viewMode !== 'camera') return;
+    if (S.lureCd > 0 || S.out.active || S.jumping || S.ended) return;
+    const active = S.activeCamera | 0;
+    const adj = (ROOM_GRAPH[active] || []).filter(r => typeof r === 'number'); // portas não contam como sala
+    const attracted = [];
+    ['hori', 'akira', 'leo', 're'].forEach(id => {
+      if (!S.friendCallNotified[id]) return;             // só amigos que já ligaram chegam
+      const ch = id === 're' ? S.re : S.chars[id];
+      const pos = id === 're' ? (S.re ? S.re.pos : null) : (ch ? ch.pos : null);
+      const arrived = id === 're' ? !!(S.re && S.re.arrived) : !!(ch && ch.arrived);
+      if (!arrived) return;
+      // amigos já na porta estão atacando — não são distraídos
+      if (S.doors.F.char === id || S.doors.B.char === id) return;
+      // atrai se estiver (a) em sala vizinha da câmera atual e (b) ainda não estava lá
+      if (pos === active || (pos != null && adj.includes(pos))) {
+        if (pos !== active) setCamPos(id, active);
+        attracted.push(id);
+      }
+    });
+    S.lureCd = 28;                                        // 28s de recarga — por noite, dado estratégico
+    AUDIO.lure();
+    if (attracted.length) {
+      const nm = attracted.map(id => (ART.CHARS[id] && ART.CHARS[id].name) || id).join(', ');
+      toast('Áudio atraiu: ' + nm);
+    } else {
+      toast('Nada veio pelo áudio.');
+    }
+    // atualiza botão imediatamente
+    refreshLureBtn();
+  }
+
+  function refreshLureBtn() {
+    const b = document.getElementById('camLure');
+    if (!b) return;
+    const cd = Math.max(0, Math.ceil((S && S.lureCd) || 0));
+    const ready = cd <= 0 && S && S.viewMode === 'camera' && !S.out.active && !S.jumping && !S.ended;
+    b.disabled = !ready;
+    b.classList.toggle('cooling', cd > 0 || (S && S.out.active));
+    b.classList.toggle('ready', ready);
+    const txt = b.querySelector('.clTxt');
+    const sub = b.querySelector('.clSub');
+    if (txt) txt.textContent = cd > 0 ? ('ÁUDIO ' + cd + 's') : 'TOCAR ÁUDIO';
+    if (sub) sub.textContent = (S && S.out.active) ? 'sem bateria' : (cd > 0 ? 'esfriando…' : 'atrai amigos das salas vizinhas');
   }
 
   /* caminho BFS entre salas e portas ('F' / 'B') */
@@ -1263,6 +1313,8 @@ function shuffle(a) {
 
     S.t += dt;
     if (S.camGlitchT > 0) S.camGlitchT = Math.max(0, S.camGlitchT - dt);
+    if (S.lureCd > 0) { S.lureCd = Math.max(0, S.lureCd - dt); }
+    refreshLureBtn();
 
     // amigos chegando um por um
     if (!S.arrivalNotified) S.arrivalNotified = {};
@@ -1715,9 +1767,16 @@ function shuffle(a) {
         S.activeCamera = n;                 // troca instantânea, com um piscar de tela
         applyCamVisual();
         AUDIO.click();
+        refreshLureBtn();                   // botão de áudio atualiza junto (ex.: bateria)
         const bl = $('camBlink');
         if (bl) { bl.classList.remove('go'); void bl.offsetWidth; bl.classList.add('go'); }
       });
+    });
+
+    const camLure = document.getElementById('camLure');
+    if (camLure) camLure.addEventListener('click', () => {
+      if (!S || S.jumping || S.ended || camAnim) return;
+      lureToCamera();
     });
 
         buildCustom();
