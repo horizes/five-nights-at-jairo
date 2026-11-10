@@ -747,7 +747,7 @@ function shuffle(a) {
 
   function setCamPos(id, room) {
     if (!S || !S.cameras) return;
-    // remove de todas as salas
+    // remove de todas as salas (deduplica preservando a ordem de chegada)
     for (let i = 0; i < S.cameras.length; i++) {
       const arr = S.cameras[i];
       if (Array.isArray(arr)) {
@@ -758,11 +758,11 @@ function shuffle(a) {
       }
     }
     if (room != null && room >= 0 && room < S.cameras.length) {
-      if (Array.isArray(S.cameras[room])) {
-        if (!S.cameras[room].includes(id)) S.cameras[room].push(id);
-      } else {
-        S.cameras[room] = id;
-      }
+      // sempre array: migra céulas com um único id e preserva a ordem — quem estava fica, quem chegou entra depois
+      let arr = S.cameras[room];
+      if (!Array.isArray(arr)) arr = arr == null ? [] : [arr];
+      if (!arr.includes(id)) arr.push(id);
+      S.cameras[room] = arr;
     }
     // sincroniza roaming / pos
     if (S.chars[id]) { S.chars[id].pos = room; S.chars[id].arrived = true; }

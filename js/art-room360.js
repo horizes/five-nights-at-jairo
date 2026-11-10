@@ -1329,8 +1329,9 @@
     const corridorDoorFriend = corridorDoorSide && S.doors && S.doors[corridorDoorSide] ? S.doors[corridorDoorSide].char : null;
     const corridorDoorEnter = corridorDoorSide && S.doors && S.doors[corridorDoorSide] && S.doors[corridorDoorSide].enterT != null ? S.doors[corridorDoorSide].enterT : 1;
     const drawList = [];
-    if (corridorDoorFriend && corridorDoorEnter > 0.45) drawList.push({ id: corridorDoorFriend, door: true });
+    // quem já estava na sala mantém a posição (ordem de chegada); quem acabou de chegar ocupa a última vaga
     friends.forEach(fid => { if (fid !== corridorDoorFriend) drawList.push({ id: fid, door: false }); });
+    if (corridorDoorFriend && corridorDoorEnter > 0.45) drawList.push({ id: corridorDoorFriend, door: true });
     if (drawList.length) {
       const N = drawList.length, STEP = 380, SPAN = (N - 1) * STEP;
       drawList.forEach((item, i) => {
