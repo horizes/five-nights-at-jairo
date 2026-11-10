@@ -620,11 +620,11 @@ const AUDIO = (function () {
     ksCache[key] = buf;
     return buf;
   }
-  /* curva de distorção (soft-clip por tanh, estilo amp de válvula) */
+  /* curva de distorção (soft-clip por tanh, estilo amp de válvula bem saturado) */
   let distCurve = null;
   function getDistCurve() {
     if (distCurve) return distCurve;
-    const n = 2048, c = new Float32Array(n), k = 4.5;
+    const n = 2048, c = new Float32Array(n), k = 10;
     for (let i = 0; i < n; i++) {
       const x = (i * 2) / (n - 1) - 1;
       c[i] = Math.tanh(k * x) / Math.tanh(k);
@@ -637,16 +637,18 @@ const AUDIO = (function () {
     const freq = 440 * Math.pow(2, (midi - 69) / 12);
     let src;
     try { src = ac.createBufferSource(); src.buffer = guitarBuffer(freq); } catch (e) { return; }
-    // cadeia elétrica: pré-drive → WaveShaper (distorção) → filtro de corpo (lowpass) → graves limpos (highpass)
-    const drive = ac.createGain(); drive.gain.value = 2.5;
+    // cadeia elétrica: pré-drive → WaveShaper (distorção) → filtro de corpo (lowpass) → graves limpos (highpass) → compressor
+    const drive = ac.createGain(); drive.gain.value = 3.0;
     const shaper = ac.createWaveShaper(); shaper.curve = getDistCurve(); shaper.oversample = '2x';
     const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 3400; lp.Q.value = 0.8;
     const hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 90; hp.Q.value = 0.7;
+    const comp = ac.createDynamicsCompressor();
+    comp.threshold.value = -16; comp.knee.value = 16; comp.ratio.value = 6; comp.attack.value = 0.003; comp.release.value = 0.22;
     const g = ac.createGain();
     g.gain.setValueAtTime(0.0001, when);
     g.gain.linearRampToValueAtTime(gain, when + 0.005);
     g.gain.exponentialRampToValueAtTime(0.0001, when + 1.55);
-    src.connect(drive); drive.connect(shaper); shaper.connect(lp); lp.connect(hp); hp.connect(g);
+    src.connect(drive); drive.connect(shaper); shaper.connect(lp); lp.connect(hp); hp.connect(comp); comp.connect(g);
     if (pan != null && ac.createStereoPanner) {
       const p = ac.createStereoPanner(); p.pan.value = pan; g.connect(p); p.connect(master);
     } else {
@@ -663,7 +665,7 @@ const AUDIO = (function () {
     const t0 = ac.currentTime + 0.03;
     song.forEach(([t, dur, midi]) => {
       const pan = (Math.random() - 0.5) * 0.5;               // leve variação estéreo por nota
-      guitarNote(midi, t0 + t, dur > 0.3 ? 0.55 : 0.48, pan);
+      guitarNote(midi, t0 + t, dur > 0.3 ? 0.38 : 0.33, pan);
     });
   }
 
