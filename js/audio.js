@@ -616,8 +616,7 @@ const AUDIO = (function () {
   ];
   let lastLure = -1;                                             // última música tocada (sacola não repete até acabar)
   let lureBag = [];
-  /* caixa de música: senoides parciais inharmônicas com decaimento lento e sutil,
-     som relaxante no espírito das brincadeiras do gênero */
+  /* caixa de música: senoides parciais inharmônicas com decaimento lento e sutil */
   const BELL_PARTIALS = [ { r: 1.0, g: 1.00 }, { r: 2.76, g: 0.42 }, { r: 5.40, g: 0.16 }, { r: 8.93, g: 0.06 } ];
   function bellNote(midi, when, gain, pan) {
     if (!ok()) return;
@@ -641,15 +640,43 @@ const AUDIO = (function () {
       o.stop(when + 2.7);
     });
   }
-  /* toca a música (índice 0..6) com som de caixa de música */
+  /* piano elétrico (rhodes) para os power-chords graves — martelo + parciais harmônicos, decaimento médio */
+  const RHODES_PARTIALS = [ { r: 1.0, g: 1.00, dur: 2.0 }, { r: 2.0, g: 0.30, dur: 1.5 }, { r: 3.0, g: 0.12, dur: 0.9 }, { r: 4.2, g: 0.05, dur: 0.6 } ];
+  function rhodesNote(midi, when, gain, pan) {
+    if (!ok()) return;
+    const freq = 440 * Math.pow(2, (midi - 69) / 12);
+    const out = ac.createGain();
+    if (pan != null && ac.createStereoPanner) {
+      const p = ac.createStereoPanner(); p.pan.value = pan; out.connect(p); p.connect(master);
+    } else {
+      out.connect(master);
+    }
+    // martelo — clique percussivo do ataque
+    burst({ dur: 0.025, freq: 1600, q: 1.6, gain: 0.22, delay: Math.max(0, when - ac.currentTime), pan });
+    RHODES_PARTIALS.forEach(({ r, g, dur }) => {
+      const o = ac.createOscillator();
+      o.type = 'sine';
+      o.frequency.value = freq * r;
+      const env = ac.createGain();
+      env.gain.setValueAtTime(0.0001, when);
+      env.gain.linearRampToValueAtTime(gain * g, when + 0.005);
+      env.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+      o.connect(env); env.connect(out);
+      o.start(when);
+      o.stop(when + dur + 0.05);
+    });
+  }
+  /* toca a música (índice 0..6) — 1.mid e 4.mid com rhodes, as demais com caixa de música */
   function playLureSong(idx) {
     if (!ok()) return;
     const song = LURE_SONGS[idx];
     if (!song) return;
+    const rhodes = (idx === 0 || idx === 3);
+    const noteFn = rhodes ? rhodesNote : bellNote;
     const t0 = ac.currentTime + 0.03;
     song.forEach(([t, dur, midi]) => {
       const pan = (Math.random() - 0.5) * 0.5;               // leve variação estéreo por nota
-      bellNote(midi, t0 + t, dur > 0.3 ? 0.30 : 0.24, pan);
+      noteFn(midi, t0 + t, dur > 0.3 ? (rhodes ? 0.34 : 0.30) : (rhodes ? 0.28 : 0.24), pan);
     });
   }
 
