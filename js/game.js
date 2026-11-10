@@ -341,6 +341,11 @@ function shuffle(a) {
     AUDIO.stopAll();
     const lv = levels || AI_TABLE[night] || AI_TABLE[1];
     S = newState(night, Object.assign({}, lv));
+    // cada nova noite começa com a bateria das luzes cheia (nunca carrega do zero)
+    ['F', 'B'].forEach(side => {
+      const d = S.doors[side];
+      d.charge = 1; d.chargeState = 'full'; d.chargeTimer = 0; d.light = false; d.approach = 0; d.stepAcc = 0;
+    });
     keys.e = false;
     drag = null;
     setScreen('night');
@@ -1377,7 +1382,7 @@ function shuffle(a) {
       if (d.light) {
         d.chargeTimer = 0;
         if (d.charge > 0) {
-          d.charge = Math.max(0, d.charge - dt / 7.5);       // ~7,5 s de luz plena
+          d.charge = Math.max(0, d.charge - dt / 4.5);       // ~4,5 s de luz plena
           if (d.charge <= 0) {
             d.chargeState = 'empty';
             d.light = false;                                  // lâmpada apaga sozinha e só volta a funcionar após recarregar
