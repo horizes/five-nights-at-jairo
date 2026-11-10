@@ -1507,14 +1507,6 @@ function shuffle(a) {
     const d = S.doors[side];
     const att = d.atten || 0;
     $('daFill').style.width = Math.round(att * 100) + '%';
-    // barra de carga da luz desta porta
-    const charge = d.charge == null ? 1 : Math.max(0, Math.min(1, d.charge));
-    const lf = $('daLightFill');
-    if (lf) {
-      lf.style.width = Math.round(charge * 100) + '%';
-      lf.classList.toggle('warn', charge < 0.35 && charge > 0);
-      lf.classList.toggle('crit', charge <= 0);
-    }
     el.classList.add('facing');
   }
 
