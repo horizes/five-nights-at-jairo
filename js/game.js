@@ -788,13 +788,13 @@ function shuffle(a) {
     if (S.chars[id]) { /* mantém pos */ }
   }
 
-  /* câmera reproduz áudio atraindo amigos das salas adjacentes para a sala atual */
+  /* câmera reproduz áudio atraindo amigos das salas adjacentes para a sala atual —
+     o efeito é apenas sonoro: o jogador descobre a atração pela câmera, não por texto */
   function lureToCamera() {
     if (!S || S.viewMode !== 'camera') return;
     if (S.lureCd > 0 || S.out.active || S.jumping || S.ended) return;
     const active = S.activeCamera | 0;
     const adj = (ROOM_GRAPH[active] || []).filter(r => typeof r === 'number'); // portas não contam como sala
-    const attracted = [];
     ['hori', 'akira', 'leo', 're'].forEach(id => {
       if (!S.friendCallNotified[id]) return;             // só amigos que já ligaram chegam
       const ch = id === 're' ? S.re : S.chars[id];
@@ -806,17 +806,10 @@ function shuffle(a) {
       // atrai se estiver (a) em sala vizinha da câmera atual e (b) ainda não estava lá
       if (pos === active || (pos != null && adj.includes(pos))) {
         if (pos !== active) setCamPos(id, active);
-        attracted.push(id);
       }
     });
     S.lureCd = lureCooldownFor(S.night);
     AUDIO.lure();
-    if (attracted.length) {
-      const nm = attracted.map(id => (ART.CHARS[id] && ART.CHARS[id].name) || id).join(', ');
-      toast('Áudio atraiu: ' + nm);
-    } else {
-      toast('Nada veio pelo áudio.');
-    }
     // atualiza botão imediatamente
     refreshLureBtn();
   }
