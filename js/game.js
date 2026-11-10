@@ -231,11 +231,18 @@ function shuffle(a) {
       // novo: carga limitada da luz da porta + progresso do amigo pelo corredor
       charge: 1.0, chargeState: 'full', chargeTimer: 0,
       approach: 0,
+      // travada após zerar: só volta a acender com 100% de carga
+      depleted: false,
       bubbleT: 0, bubbleText: '', bubbleSide: 1, bubbleLift: 1 };
   }
 
   function newState(night, levels) {
-    const quota = QUOTA[night] + (save.backlog || 0);
+    let quota = QUOTA[night] + (save.backlog || 0);
+    if ((night | 0) >= 7 && levels) {
+      // noite personalizada: a meta aumenta conforme a dificuldade média do elenco
+      const avg = ['hori', 'akira', 'leo', 're'].reduce((a, k) => a + Math.max(0, Math.min(20, levels[k] | 0)), 0) / 4;
+      quota = 4 + Math.round((avg / 20) * 5) + (save.backlog || 0);    // dificuldade 0 → 4 pedidos · 20 → 9 pedidos (+ atraso)
+    }
     const orders = makeOrders(quota);
     const mult = nightJobMult(night, levels);
     // elenco da noite, em ordem aleatória a cada visita
@@ -344,7 +351,7 @@ function shuffle(a) {
     // cada nova noite começa com a bateria das luzes cheia (nunca carrega do zero)
     ['F', 'B'].forEach(side => {
       const d = S.doors[side];
-      d.charge = 1; d.chargeState = 'full'; d.chargeTimer = 0; d.light = false; d.approach = 0; d.stepAcc = 0;
+      d.charge = 1; d.chargeState = 'full'; d.chargeTimer = 0; d.light = false; d.approach = 0; d.stepAcc = 0; d.depleted = false;
     });
     keys.e = false;
     drag = null;
@@ -647,6 +654,12 @@ function shuffle(a) {
   function toggleLight(side) {
     if (!S || screen !== 'play' || S.jumping || S.ended) return;
     const d = S.doors[side];
+    // lâmpada esgotada antes: só acende de novo com 100% de carga
+    if (!d.light && d.depleted) {
+      AUDIO.click();
+      S.shake = Math.max(S.shake || 0, 2);
+      return;
+    }
     // lâmpada descarregada: não acende enquanto não recarregar
     if (!d.light && (d.charge || 0) <= 0) {
       AUDIO.click();
@@ -928,9 +941,9 @@ function shuffle(a) {
     d.leaving = false;
     d.appearing = true;
     d.approach = 0.08;                                  // começa longe, no fundo do corredor
-    d.apprRate = (function () {                          // velocidade de chegada escala com a noite
-      const n = S && (S.night | 0) || 1;
-      return 1 / Math.max(38, 105 - n * 13);            // n1~92s, n6~34s
+    d.apprRate = (function () {                          // atravessa o corredor no tempo clássico da paciência
+      const span = 0.92;                                // de 0.08 (fundo) até 1.0 (a soleira)
+      return span / doorPatience(S.night, id);         // campanha 10s→3,5s · custom 9,5s→5,2s conforme o ajuste
     })();
     d.attenNeed = (S.night | 0) >= 7
       ? 0.9 + Math.random() * 1.6 + customDiff(id) * 1.35   // amigos mais agressivos exigem mais atenção
@@ -1386,6 +1399,7 @@ function shuffle(a) {
           if (d.charge <= 0) {
             d.chargeState = 'empty';
             d.light = false;                                  // lâmpada apaga sozinha e só volta a funcionar após recarregar
+            d.depleted = true;                                 // trava: só acende de novo com 100% de carga
             AUDIO.lightHum(side, false);
             if (AUDIO.lightDie) AUDIO.lightDie();             // "bzzt" da lâmpada morrendo
           } else if (d.charge < 0.35) d.chargeState = 'low';
@@ -1394,12 +1408,13 @@ function shuffle(a) {
       } else {
         // luz apagada: lâmpada recupera — mais rápido se não chegou a zerar, mais lento de 0
         d.chargeTimer = (d.chargeTimer || 0) + dt;
-        const depleted = (d.charge == null ? 1 : d.charge) <= 0;
+        const depleted = !!d.depleted || (d.charge == null ? 1 : d.charge) <= 0;
         const need     = depleted ? 2.0 : 1.2;                       // de 0 demora mais para começar a voltar
-        const speed    = depleted ? 1 / 16 : 1 / 6;                 // de 0 leva ~16 s; de carga parcial ~6 s
+        const speed    = depleted ? 1 / 16 : 1 / 6;                 // travar até 100% demora ~16 s
         if (d.chargeTimer > need) {
           d.charge = Math.min(1, (d.charge == null ? 1 : d.charge) + dt * speed);
-          if (d.charge >= 1) d.chargeState = 'full';
+          if (d.charge >= 1) { d.chargeState = 'full'; d.depleted = false; }   // 100%: destrava
+          else if (d.depleted) d.chargeState = 'empty';                        // destrava só com 100%
           else if (d.charge < 0.35) d.chargeState = d.charge <= 0 ? 'empty' : 'low';
           else d.chargeState = 'full';
         }

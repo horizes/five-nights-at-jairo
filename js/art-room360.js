@@ -648,7 +648,7 @@
       const scMax = 1.62;                                    // corpo inteiro na soleira
       const sc = scMax * (0.08 + 0.92 * ease);               // longe = sombra minúscula
       const byFar = y + h * 0.56;                            // fundo do corredor (lá na escuridão)
-      const byNear = y + h + 18 + ease * 46;                 // na soleira quando próximo
+      const byNear = y + h + 10 + ease * 4;                  // NA PORTA — nunca entra para dentro da sala
       const by = byFar + (byNear - byFar) * ease;
       const sway = Math.sin(t * 2.15 + st.char.length) * (1 - ease * 0.6) * 8;
       A.mascot(g, st.char, {
@@ -756,18 +756,21 @@
     [[px - 50, by[1] - 58], [px + 50, by[1] - 58], [px - 50, by[1] + 58], [px + 50, by[1] + 58]]
       .forEach(([x, y]) => { A.ell(g, x, y, 4, 4); g.fill(); });
 
-    // barra de carga da lâmpada (drena enquanto a luz fica acesa com o amigo na porta)
+    // barra de carga da lâmpada (drena enquanto a luz fica acesa; após esgotar, recarga verde até 100%)
     const charge = st.charge == null ? 1 : Math.max(0, Math.min(1, st.charge));
+    const depleted = !!st.depleted;
     const bw = 92, bh = 13, bx = px - bw / 2, byy = by[1] - R - 28;
     g.fillStyle = '#060708';
     A.rr(g, bx, byy, bw, bh, 3); g.fill();
-    if (charge > 0.02) {
-      const col = charge < 0.18 ? '#ff5a3d' : (charge < 0.35 ? '#ffb648' : '#7cc6ff');
+    if (charge > 0.02 || depleted) {
+      const col = depleted ? '#3ddc78' : (charge < 0.18 ? '#ff5a3d' : (charge < 0.35 ? '#ffb648' : '#7cc6ff'));
       g.fillStyle = col;
       const fw = Math.max(4, (bw - 4) * charge);
       A.rr(g, bx + 2, byy + 2.5, fw, bh - 5, 2); g.fill();
       if (st.chargeState === 'low' || st.chargeState === 'empty') {
-        g.fillStyle = 'rgba(255,120,40,' + (0.35 + Math.sin((t || 0) * 6) * 0.2).toFixed(3) + ')';
+        g.fillStyle = depleted
+          ? 'rgba(60,255,140,' + (0.30 + Math.sin((t || 0) * 6) * 0.18).toFixed(3) + ')'
+          : 'rgba(255,120,40,' + (0.35 + Math.sin((t || 0) * 6) * 0.2).toFixed(3) + ')';
         A.rr(g, bx, byy, bw, bh, 3); g.fill();
       }
     }
