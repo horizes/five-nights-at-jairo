@@ -391,9 +391,6 @@ function shuffle(a) {
       AUDIO.startRoom();
       startPhone();
       updateHUD(true);
-      toast(night === 1
-        ? 'Imprima e embale os pedidos. Sobreviva até as 6.'
-        : 'Meta da noite: ' + S.quota + ' pedidos.');
     }, 2500);
   }
 
