@@ -1368,14 +1368,15 @@ function shuffle(a) {
       if (d.leaving) {
         d.enterT = Math.max(0, (d.enterT == null ? 1 : d.enterT) - dt / 1.15);
         if (d.enterT === 0 && d.char) {
-          d.char = null; d.wait = 0; d.atten = 0; d.prox = 0; d.leaving = false; d.approach = 0; d.chargeState = 'full';
+          d.char = null; d.wait = 0; d.atten = 0; d.prox = 0; d.leaving = false; d.approach = 0;
         }
       }
 
-      // carga da lâmpada: consome enquanto ligada e alguém está na porta; recarrega quando a porta está vazia
-      if (d.char && !d.leaving) {
+      // carga da lâmpada: consome enquanto a luz estiver acesa (com ou sem amigo na porta);
+      // recarrega apenas com a luz apagada
+      if (d.light) {
         d.chargeTimer = 0;
-        if (d.light && d.charge > 0) {
+        if (d.charge > 0) {
           d.charge = Math.max(0, d.charge - dt / 7.5);       // ~7,5 s de luz plena
           if (d.charge <= 0) {
             d.chargeState = 'empty';
@@ -1385,12 +1386,12 @@ function shuffle(a) {
           else d.chargeState = 'full';
         }
       } else {
-        // porta vazia: lâmpada recupera devagar
-        d.chargeTimer = Math.max(0, d.chargeTimer + dt);
+        // luz apagada: lâmpada recupera devagar
+        d.chargeTimer = (d.chargeTimer || 0) + dt;
         if (d.chargeTimer > 1.2) {
-          d.charge = Math.min(1, d.charge + dt / 10);        // ~10 s para carga cheia
+          d.charge = Math.min(1, (d.charge == null ? 1 : d.charge) + dt / 10);   // ~10 s para carga cheia
           if (d.charge >= 1) d.chargeState = 'full';
-          else if (d.charge < 0.35) d.chargeState = 'low';
+          else if (d.charge < 0.35) d.chargeState = d.charge <= 0 ? 'empty' : 'low';
           else d.chargeState = 'full';
         }
       }
