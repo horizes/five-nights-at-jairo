@@ -43,11 +43,11 @@ const GAME = (function () {
      1 = tutorial/fácil · 2-3 = médias · 4-5 = bem difíceis · 6 = super difícil — no limite do humanamente possível */
   const DIFF = {
     1: { mult: 1.00, ai: 1.00, patience: 10.0, atten: 1.5, decay: 1.2, gap: 19 },
-    2: { mult: 1.05, ai: 1.15, patience: 8.0,  atten: 2.0, decay: 1.4, gap: 17 },
-    3: { mult: 1.12, ai: 1.30, patience: 6.5,  atten: 2.5, decay: 1.7, gap: 15 },
-    4: { mult: 1.15, ai: 1.55, patience: 5.0,  atten: 3.0, decay: 2.0, gap: 12 },
-    5: { mult: 1.20, ai: 1.70, patience: 4.0,  atten: 3.5, decay: 2.5, gap: 10 },
-    6: { mult: 1.25, ai: 1.85, patience: 3.5,  atten: 4.0, decay: 3.0, gap: 7  }
+    2: { mult: 1.05, ai: 1.17, patience:  8.0, atten: 2.0, decay: 1.5, gap: 17 },
+    3: { mult: 1.10, ai: 1.34, patience:  6.5, atten: 2.5, decay: 1.8, gap: 15 },
+    4: { mult: 1.15, ai: 1.51, patience:  5.3, atten: 3.0, decay: 2.1, gap: 12 },
+    5: { mult: 1.20, ai: 1.68, patience:  4.4, atten: 3.4, decay: 2.5, gap: 10 },
+    6: { mult: 1.25, ai: 1.85, patience:  3.9, atten: 3.8, decay: 3.0, gap:  7 }
   };
   /* aceita frações: usado pela noite personalizada (interpola a curva da campanha) */
   function diffOf(night) {

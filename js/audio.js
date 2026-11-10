@@ -236,11 +236,24 @@ const AUDIO = (function () {
       tone({ freq: 150, to: 62, dur: 0.16, gain: 0.3, type: 'sine' });
       burst({ dur: 0.07, freq: 2300, q: 2.4, gain: 0.16, delay: 0.19 });
     },
-    // pool de 7 músicas (MIDI) — atrai amigos pelas câmeras; nunca repete a mesma sequência seguida
+    // pool de 7 músicas (MIDI) — atrai amigos pelas câmeras; variação total (sacola embaralhada)
     lure() {
       if (!ok()) return;
-      let idx;
-      do { idx = (Math.random() * LURE_SONGS.length) | 0; } while (idx === lastLure);
+      if (!lureBag.length) {
+        // sacola vazia: embaralha todas as músicas e enche de novo
+        const bag = LURE_SONGS.map((_, i) => i);
+        for (let i = bag.length - 1; i > 0; i--) {
+          const j = (Math.random() * (i + 1)) | 0;
+          const t = bag[i]; bag[i] = bag[j]; bag[j] = t;
+        }
+        // garante que a primeira da nova sacola não seja a que acabou de tocar
+        if (bag.length > 1 && bag[bag.length - 1] === lastLure) {
+          const swap = (Math.random() * (bag.length - 1)) | 0;
+          const t = bag[bag.length - 1]; bag[bag.length - 1] = bag[swap]; bag[swap] = t;
+        }
+        lureBag = bag;
+      }
+      const idx = lureBag.pop();
       lastLure = idx;
       playLureSong(idx);
       // leve estática por baixo, como alto-falante distante da gráfica
@@ -601,63 +614,34 @@ const AUDIO = (function () {
     [ [0, .183, 71], [.183, .183, 69], [.366, .366, 64], [.732, .366, 64] ],                                // 6.mid — B4 A4 E4 E4
     [ [0, .183, 69], [.183, .183, 71], [.366, .366, 68], [.732, .366, 64] ]                                // 7.mid — A4 B4 G#4 E4
   ];
-  let lastLure = -1;                                             // impede repetir a mesma música duas vezes seguidas
-  const ksCache = {};
-  function guitarBuffer(freq) {
-    const key = Math.round(freq * 100);
-    if (ksCache[key]) return ksCache[key];
-    const sr = ac.sampleRate;
-    const N = Math.max(2, Math.round(sr / freq));
-    const len = Math.floor(sr * 1.6);
-    const buf = ac.createBuffer(1, len, sr);
-    const out = buf.getChannelData(0);
-    for (let i = 0; i < N; i++) out[i] = Math.random() * 2 - 1;    // ataque "dedilhada"
-    const decay = 0.995;                                           // decaimento da corda (elétrica, mais seca)
-    for (let i = N; i < len; i++) {
-      const a = out[i - N], b = out[i - N + 1] === undefined ? a : out[i - N + 1];
-      out[i] = (a + b) * 0.5 * decay;                              // média = lowpass da corda
-    }
-    ksCache[key] = buf;
-    return buf;
-  }
-  /* curva de distorção (soft-clip por tanh, estilo amp de válvula bem saturado) */
-  let distCurve = null;
-  function getDistCurve() {
-    if (distCurve) return distCurve;
-    const n = 2048, c = new Float32Array(n), k = 10;
-    for (let i = 0; i < n; i++) {
-      const x = (i * 2) / (n - 1) - 1;
-      c[i] = Math.tanh(k * x) / Math.tanh(k);
-    }
-    distCurve = c;
-    return distCurve;
-  }
-  function guitarNote(midi, when, gain, pan) {
+  let lastLure = -1;                                             // última música tocada (sacola não repete até acabar)
+  let lureBag = [];
+  /* caixa de música: senoides parciais inharmônicas com decaimento lento e sutil,
+     som relaxante no espírito das brincadeiras do gênero */
+  const BELL_PARTIALS = [ { r: 1.0, g: 1.00 }, { r: 2.76, g: 0.42 }, { r: 5.40, g: 0.16 }, { r: 8.93, g: 0.06 } ];
+  function bellNote(midi, when, gain, pan) {
     if (!ok()) return;
     const freq = 440 * Math.pow(2, (midi - 69) / 12);
-    let src;
-    try { src = ac.createBufferSource(); src.buffer = guitarBuffer(freq); } catch (e) { return; }
-    // cadeia elétrica: pré-drive → WaveShaper (distorção) → filtro de corpo (lowpass) → graves limpos (highpass) → compressor
-    const drive = ac.createGain(); drive.gain.value = 3.0;
-    const shaper = ac.createWaveShaper(); shaper.curve = getDistCurve(); shaper.oversample = '2x';
-    const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 3400; lp.Q.value = 0.8;
-    const hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 90; hp.Q.value = 0.7;
-    const comp = ac.createDynamicsCompressor();
-    comp.threshold.value = -16; comp.knee.value = 16; comp.ratio.value = 6; comp.attack.value = 0.003; comp.release.value = 0.22;
-    const g = ac.createGain();
-    g.gain.setValueAtTime(0.0001, when);
-    g.gain.linearRampToValueAtTime(gain, when + 0.005);
-    g.gain.exponentialRampToValueAtTime(0.0001, when + 1.55);
-    src.connect(drive); drive.connect(shaper); shaper.connect(lp); lp.connect(hp); hp.connect(comp); comp.connect(g);
+    const out = ac.createGain();
     if (pan != null && ac.createStereoPanner) {
-      const p = ac.createStereoPanner(); p.pan.value = pan; g.connect(p); p.connect(master);
+      const p = ac.createStereoPanner(); p.pan.value = pan; out.connect(p); p.connect(master);
     } else {
-      g.connect(master);
+      out.connect(master);
     }
-    src.start(when);
-    src.stop(when + 1.6);
+    BELL_PARTIALS.forEach(({ r, g }) => {
+      const o = ac.createOscillator();
+      o.type = 'sine';
+      o.frequency.value = freq * r;
+      const env = ac.createGain();
+      env.gain.setValueAtTime(0.0001, when);
+      env.gain.linearRampToValueAtTime(gain * g, when + 0.004);
+      env.gain.exponentialRampToValueAtTime(0.0001, when + 2.6);
+      o.connect(env); env.connect(out);
+      o.start(when);
+      o.stop(when + 2.7);
+    });
   }
-  /* toca a música (índice 0..6) com som de guitarra elétrica distorcida */
+  /* toca a música (índice 0..6) com som de caixa de música */
   function playLureSong(idx) {
     if (!ok()) return;
     const song = LURE_SONGS[idx];
@@ -665,7 +649,7 @@ const AUDIO = (function () {
     const t0 = ac.currentTime + 0.03;
     song.forEach(([t, dur, midi]) => {
       const pan = (Math.random() - 0.5) * 0.5;               // leve variação estéreo por nota
-      guitarNote(midi, t0 + t, dur > 0.3 ? 0.38 : 0.33, pan);
+      bellNote(midi, t0 + t, dur > 0.3 ? 0.30 : 0.24, pan);
     });
   }
 
