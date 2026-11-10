@@ -763,7 +763,7 @@ function shuffle(a) {
         attracted.push(id);
       }
     });
-    S.lureCd = 28;                                        // 28s de recarga — por noite, dado estratégico
+    S.lureCd = lureCooldownFor(S.night);
     AUDIO.lure();
     if (attracted.length) {
       const nm = attracted.map(id => (ART.CHARS[id] && ART.CHARS[id].name) || id).join(', ');
@@ -775,6 +775,17 @@ function shuffle(a) {
     refreshLureBtn();
   }
 
+  /* cooldown do atrair áudio escala por noite (começa em 4s, +1.2s por noite, teto 10s) */
+  function lureCooldownFor(night) {
+    const n = (night | 0) || 1;
+    if (n >= 7) {
+      // noite personalizada: usa a agressividade média dos amigos
+      const avg = ['hori', 'akira', 'leo', 're'].reduce((a, k) => a + ((((S && S.levels) || {})[k]) | 0), 0) / 80;
+      return Math.round(2.8 + avg * 8);                  // 2..11s, cap ajustado internamente
+    }
+    return Math.round(2.8 + n * 1.2);                    // 1→4s, 2→5s, 3→6s, 4→8s, 5→9s, 6→10s
+  }
+
   function refreshLureBtn() {
     const b = document.getElementById('camLure');
     if (!b) return;
@@ -784,9 +795,7 @@ function shuffle(a) {
     b.classList.toggle('cooling', cd > 0 || (S && S.out.active));
     b.classList.toggle('ready', ready);
     const txt = b.querySelector('.clTxt');
-    const sub = b.querySelector('.clSub');
     if (txt) txt.textContent = cd > 0 ? ('ÁUDIO ' + cd + 's') : 'TOCAR ÁUDIO';
-    if (sub) sub.textContent = (S && S.out.active) ? 'sem bateria' : (cd > 0 ? 'esfriando…' : 'atrai amigos das salas vizinhas');
   }
 
   /* caminho BFS entre salas e portas ('F' / 'B') */

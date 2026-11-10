@@ -161,17 +161,16 @@ html,body{
 /* botão TOCAR ÁUDIO — abaixo do mapa das câmeras */
 .camLure{position:absolute;left:calc(var(--u)*16);bottom:calc(var(--u)*12);
   width:calc(var(--u)*348);min-height:calc(var(--u)*74);z-index:2;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(var(--u)*2);
+  display:flex;flex-direction:row;align-items:center;justify-content:center;gap:calc(var(--u)*14);
   font-family:"Courier New",monospace;color:#ffe9a8;
   background:linear-gradient(180deg, rgba(28,34,40,.85) 0%, rgba(14,18,22,.9) 100%);
   border:calc(var(--u)*2) solid rgba(255,214,150,.55);
-  padding:calc(var(--u)*8) calc(var(--u)*10);cursor:pointer;pointer-events:auto;
+  padding:calc(var(--u)*10) calc(var(--u)*12);cursor:pointer;pointer-events:auto;
   letter-spacing:.12em;text-shadow:0 0 calc(var(--u)*8) rgba(255,190,80,.35);
   box-shadow:0 0 calc(var(--u)*18) rgba(255,180,60,.08), inset 0 0 calc(var(--u)*18) rgba(255,210,120,.10)}
 .camLure:hover:not(:disabled){background:linear-gradient(180deg, rgba(46,54,60,.95) 0%, rgba(24,28,32,.9) 100%);box-shadow:0 0 calc(var(--u)*22) rgba(255,210,110,.18)}
-.camLure .clIcon{font-size:calc(var(--u)*34);line-height:1;color:#ffd479}
+.camLure .clIcon{font-size:calc(var(--u)*36);line-height:1;color:#ffd479}
 .camLure .clTxt{font-size:calc(var(--u)*17);font-weight:700;letter-spacing:.08em}
-.camLure .clSub{font-size:calc(var(--u)*10);color:#aeb8bf;letter-spacing:.02em;text-transform:none}
 .camLure[disabled]{opacity:.45;cursor:not-allowed;filter:grayscale(.6)}
 .camLure.ready .clIcon{color:#ffd479;filter:drop-shadow(0 0 calc(var(--u)*8) rgba(255,200,80,.9))}
 .camLure.cooling .clIcon{color:#8a8a8a}
