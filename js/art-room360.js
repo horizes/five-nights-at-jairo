@@ -1350,7 +1350,8 @@
             spot = (base < 0 ? -1 : 1) * (175 + (Math.abs(base) % 165));
           }
         } else {
-          spot = Math.max(-470, Math.min(470, base));                        // fora da área do mapa
+          // fora do corredor os amigos podem ficar sob a área do mapa — o mapa é opaco e desenhado por cima do canvas
+          spot = base;
         }
         const cx = VW / 2 + spot + wave;
         if (item.door) {
