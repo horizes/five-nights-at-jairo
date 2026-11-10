@@ -181,6 +181,12 @@ html,body{
 #daHint{font-size:calc(var(--u)*14);letter-spacing:.14em;color:#a8b7c0;margin-top:calc(var(--u)*2);max-width:calc(var(--u)*460);white-space:normal;line-height:1.5;margin-left:auto;margin-right:auto}
 #daBar{width:calc(var(--u)*230);height:calc(var(--u)*11);margin:calc(var(--u)*5) auto 0;border:calc(var(--u)*2) solid rgba(255,214,150,.6);background:rgba(0,0,0,.65);padding:calc(var(--u)*1)}
 #daFill{height:100%;width:0;background:linear-gradient(90deg,#ffd479,#ffb648);transition:width .1s linear}
+#daLightBar{display:flex;align-items:center;gap:calc(var(--u)*10);width:calc(var(--u)*230);margin:calc(var(--u)*4) auto 0}
+#daLightLbl{font-size:calc(var(--u)*12);letter-spacing:.22em;color:#9fb0ba}
+#daLightTrack{flex:1;height:calc(var(--u)*9);border:calc(var(--u)*2) solid rgba(160,210,235,.35);background:rgba(0,0,0,.55);padding:calc(var(--u)*1)}
+#daLightFill{height:100%;width:100%;background:linear-gradient(90deg,#a8d8ff,#5fb3ff);transition:width .12s linear;box-shadow:0 0 calc(var(--u)*6) rgba(120,190,255,.5)}
+#daLightFill.warn{background:linear-gradient(90deg,#ffb648,#ff7a18);box-shadow:0 0 calc(var(--u)*8) rgba(255,150,30,.55)}
+#daLightFill.crit{background:linear-gradient(90deg,#ff3b30,#a10d0d);box-shadow:0 0 calc(var(--u)*10) rgba(255,50,30,.65);animation:pulse .7s infinite}
 #doorAtten.facing #daHint{color:#ffd479}
 
 #scr-end{flex-direction:column;gap:calc(var(--u)*14);background:#000}

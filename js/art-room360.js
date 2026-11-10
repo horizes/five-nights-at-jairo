@@ -637,29 +637,29 @@
       A.rr(g, cx - 26, y + 30, 52, 9, 4); g.fill();
     }
 
-    // personagem é desenhado DEPOIS de restaurar o clipe, por cima das camadas — dentro da sala: normal.
-    // sem animação de entrada: ele já aparece na soleira; ao ser repelido, a animação de saída o afasta para o fundo do corredor
+    // personagem é desenhado DEPOIS de restaurar o clipe — escala e posição ditadas por d.approach:
+    // começa como uma silhueta minúscula no fim do corredor e cresce até o corpo inteiro na soleira
     g.restore();
     const charVisible = st.char && (S.friendCallNotified ? S.friendCallNotified[st.char] : true);
     if (st.char && charVisible) {
-      const kRaw = st.enterT == null ? 1 : st.enterT;
-      const ease = 1 - Math.pow(1 - Math.min(1, Math.max(0, kRaw)), 2);   // ease-out: rápido devagar no fim
-      // aproximação sutil conforme a paciência acaba
-      const prox = (st.prox || 0) * ease;
-      const scMax = 1.62 + prox * 0.16;                    // cresce levemente
-      const sc = scMax * (0.40 + 0.60 * ease);             // começa pequeno no fundo do corredor
-      const byFar = y + h * 0.70;                          // fundo do corredor (lá na escuridão)
-      const byNear = y + h + 18 + prox * 58;               // na soleira
+      const approach = Math.max(0, Math.min(1, st.approach == null ? 1 : st.approach));
+      const depth = st.leaving ? Math.max(0, Math.min(1, st.enterT == null ? 0 : st.enterT)) : approach;
+      const ease = 1 - Math.pow(1 - depth, 2.2);             // ease-out: pequeno de longe, grande de perto
+      const scMax = 1.62;                                    // corpo inteiro na soleira
+      const sc = scMax * (0.08 + 0.92 * ease);               // longe = sombra minúscula
+      const byFar = y + h * 0.56;                            // fundo do corredor (lá na escuridão)
+      const byNear = y + h + 18 + ease * 46;                 // na soleira quando próximo
       const by = byFar + (byNear - byFar) * ease;
-      const sway = Math.sin(t * 2.15 + st.char.length) * 9 * prox;  // balanço leve
+      const sway = Math.sin(t * 2.15 + st.char.length) * (1 - ease * 0.6) * 8;
       A.mascot(g, st.char, {
         x: cx + sway, y: by, scale: sc, t,
-        bright: lit ? 0.75 + 0.2 * ease : 0.45 + 0.3 * ease,
-        glow: true, pose: 'idle', mouth: 0.15 + prox * 0.15
+        bright: lit ? 0.55 + 0.35 * ease : 0.24 + 0.36 * ease,
+        glow: true, pose: 'idle', mouth: 0.08 + ease * 0.25
       });
       // profundidade: quanto mais longe, mais afundado na escuridão do corredor
-      if (ease < 0.995) {
-        g.fillStyle = 'rgba(2,3,4,' + ((1 - ease) * 0.8).toFixed(3) + ')';
+      const darkness = (1 - ease) * (lit ? 0.5 : 0.78);
+      if (darkness > 0.03) {
+        g.fillStyle = 'rgba(2,3,4,' + darkness.toFixed(3) + ')';
         g.fillRect(x, y, w, h + 100);
       }
 
@@ -740,10 +740,10 @@
     // (lâmpada de status removida)
 
     // painel de botões
-    drawPanel(g, cx + D.btn, D.by, st, S.powerOut, side);
+    drawPanel(g, cx + D.btn, D.by, st, S.powerOut, side, t);
   }
 
-  function drawPanel(g, px, by, st, powerOut, side) {
+  function drawPanel(g, px, by, st, powerOut, side, t) {
     const R = 42;
     // placa (apenas luz)
     g.fillStyle = '#0b0e10';
@@ -756,13 +756,23 @@
     [[px - 50, by[1] - 58], [px + 50, by[1] - 58], [px - 50, by[1] + 58], [px + 50, by[1] + 58]]
       .forEach(([x, y]) => { A.ell(g, x, y, 4, 4); g.fill(); });
 
-    // LED de luz
+    // barra de carga da lâmpada (drena enquanto a luz fica acesa com o amigo na porta)
+    const charge = st.charge == null ? 1 : Math.max(0, Math.min(1, st.charge));
+    const bw = 92, bh = 13, bx = px - bw / 2, byy = by[1] - R - 28;
     g.fillStyle = '#060708';
-    A.rr(g, px - 9, by[1] - R - 26, 18, 14, 3); g.fill();
-    if (st.light && !powerOut) {
-      g.fillStyle = A.rad(g, px, by[1] - R - 19, 0, 20, [[0, A.rgba('#ffd23f', 0.9)], [1, A.rgba('#ffd23f', 0)]]);
-      A.ell(g, px, by[1] - R - 19, 20, 20); g.fill();
+    A.rr(g, bx, byy, bw, bh, 3); g.fill();
+    if (charge > 0.02) {
+      const col = charge < 0.18 ? '#ff5a3d' : (charge < 0.35 ? '#ffb648' : '#7cc6ff');
+      g.fillStyle = col;
+      const fw = Math.max(4, (bw - 4) * charge);
+      A.rr(g, bx + 2, byy + 2.5, fw, bh - 5, 2); g.fill();
+      if (st.chargeState === 'low' || st.chargeState === 'empty') {
+        g.fillStyle = 'rgba(255,120,40,' + (0.35 + Math.sin((t || 0) * 6) * 0.2).toFixed(3) + ')';
+        A.rr(g, bx, byy, bw, bh, 3); g.fill();
+      }
     }
+    g.strokeStyle = 'rgba(255,255,255,.2)'; g.lineWidth = 1.5;
+    A.rr(g, bx, byy, bw, bh, 3); g.stroke();
 
     // botão luz
     g.fillStyle = powerOut ? '#141414' : (st.light ? '#8a6a12' : '#17303c');

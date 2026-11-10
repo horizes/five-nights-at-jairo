@@ -144,6 +144,8 @@ function shuffle(a) {
       'Oi, filho. Tudo bem? Olha, estou te ligando porque sobraram alguns pedidos para amanhã e o pessoal foi embora.',
       'Você é o único aí que sabe operar as impressoras. Pode ficar aí à noite e terminar tudo?',
       'Hoje são {q} pedidos. São 3 impressoras: offset, digital e UV. Cada pedido indica qual usar.',
+      'Olha, filho, uma dicazinho do seu pai: se você ouvir alguma batida ou coisa no corredor, já sabe — liga a luz da porta e dá uma espiada.',
+      'Mas cuidado com isso, viu? Se ficar muito tempo acesa, ela descarrega e demora um pouco pra voltar.',
       'A entrega é para amanhã de manhã. Se der tudo certo, o cliente renova o contrato.',
       'Só isso, viu? Qualquer coisa, me liga de volta.',
       'Boa noite, filho. Obrigado!'
@@ -224,7 +226,12 @@ function shuffle(a) {
   }
 
   function newDoor() {
-    return { closed: false, closedAmt: 0, light: false, char: null, wait: 0, atten: 0, attenNeed: 1.6, enterT: 0, leaving: false, bubbleT: 0, bubbleText: '', bubbleSide: 1, bubbleLift: 1 };
+    return { closed: false, closedAmt: 0, light: false,
+      char: null, atten: 0, attenNeed: 1.6, enterT: 0, leaving: false,
+      // novo: carga limitada da luz da porta + progresso do amigo pelo corredor
+      charge: 1.0, chargeState: 'full', chargeTimer: 0,
+      approach: 0,
+      bubbleT: 0, bubbleText: '', bubbleSide: 1, bubbleLift: 1 };
   }
 
   function newState(night, levels) {
@@ -635,6 +642,12 @@ function shuffle(a) {
   function toggleLight(side) {
     if (!S || screen !== 'play' || S.jumping || S.ended) return;
     const d = S.doors[side];
+    // lâmpada descarregada: não acende enquanto não recarregar
+    if (!d.light && (d.charge || 0) <= 0) {
+      AUDIO.click();
+      S.shake = Math.max(S.shake || 0, 2);
+      return;
+    }
     d.light = !d.light;
     AUDIO.lightOn();
     AUDIO.lightHum(side, d.light);
@@ -908,31 +921,35 @@ function shuffle(a) {
     d.prox = 0;
     d.enterT = 1;          // sem animação de entrada: o amigo já está na soleira
     d.leaving = false;
+    d.appearing = true;
+    d.approach = 0.08;                                  // começa longe, no fundo do corredor
+    d.apprRate = (function () {                          // velocidade de chegada escala com a noite
+      const n = S && (S.night | 0) || 1;
+      return 1 / Math.max(38, 105 - n * 13);            // n1~92s, n6~34s
+    })();
     d.attenNeed = (S.night | 0) >= 7
       ? 0.9 + Math.random() * 1.6 + customDiff(id) * 1.35   // amigos mais agressivos exigem mais atenção
       : 0.9 + Math.random() * 1.6 + (S.night - 1) * 0.12;   // cada aparição exige atenção aleatória
-    // porta avisa por som: batida na porta (estéreo pela posição da porta em relação a você)
-    // só toca enquanto o amigo ainda estiver naquela porta
+    // porta avisa por som: passos ecoando no corredor (estéreo pela posição da porta em relação a você)
     const rel = wrap(ART.ROOM.doors[side].angle - S.yaw);
     const pan = Math.abs(rel) < 0.18 ? 0 : Math.max(-0.85, Math.min(0.85, rel / 1.2));
-    AUDIO.knockDoor(pan, () => S.doors[side].char === id);
+    AUDIO.footsteps(pan);
     S.shake = Math.max(S.shake, 6);
     return true;
   }
 
   /* atenção: olhar + segurar E enche a barra; se encher, o amigo recua.
-     a atenção decai rápido se o jogador olhar para outro lado ou soltar E */
+     a atenção decai rápido se o jogador olhar para outro lado ou soltar E.
+     o jumpscare vem quando o amigo termina de atravessar o corredor (approach == 1) */
   function handleDoorWait(id, side, d, dt) {
     if (d.leaving) return; // já está de saída; quem controla a saída é a animação de recuo
     const angle = side === 'F' ? 0 : Math.PI;
     const watching = Math.abs(wrap(angle - S.yaw)) < 0.42;
     const attending = watching && S.holdE && eTarget() === 'door';
-    // paciência NÃO progride de jeito nenhum enquanto você dá atenção
-    if (!attending) d.wait += dt;
     if (d.atten == null) d.atten = 0;
     if (attending) {
       d.atten = Math.min(1, d.atten + dt / (d.attenNeed || attenTime(S.night)));
-      // balão de fala: evento semi-raro — poucas vezes por noite no máximo (texto fica vazio por enquanto)
+      // balão de fala: evento semi-raro — poucas vezes por noite no máximo
       if (d.bubbleT <= 0 && (S.bubbleCount || 0) < 5 && Math.random() < dt * 0.10) {
         S.bubbleCount = (S.bubbleCount || 0) + 1;
         d.bubbleT = 2.6;
@@ -944,10 +961,9 @@ function shuffle(a) {
     } else {
       d.atten = Math.max(0, d.atten - dt * attenDecay(S.night, id));
     }
-    // proximidade avança apenas quando NÃO está dando atenção — leve progresso do susto
-    if (!attending) d.prox = Math.min(1, (d.prox || 0) + dt / (doorPatience(S.night, id) * 0.7));
+    // jumpscare: o amigo chegou na porta
+    if ((d.approach || 0) >= 1) { triggerJumpscare(id); return; }
     if (d.atten >= 1) { retreat(id, side); return; }
-    if (d.wait > doorPatience(S.night, id)) triggerJumpscare(id);
   }
 
   function tickFriend(dt, id) {
@@ -1342,7 +1358,7 @@ function shuffle(a) {
     if (keys.arrowleft) S.yaw = wrap(S.yaw - 2.0 * dt);
     if (keys.arrowright) S.yaw = wrap(S.yaw + 2.0 * dt);
 
-    // animação das portas
+    // animação das portas + mecânica de luz limitada + aproximação do amigo
     ['F', 'B'].forEach(side => {
       const d = S.doors[side];
       const target = d.closed ? 1 : 0;
@@ -1352,9 +1368,57 @@ function shuffle(a) {
       if (d.leaving) {
         d.enterT = Math.max(0, (d.enterT == null ? 1 : d.enterT) - dt / 1.15);
         if (d.enterT === 0 && d.char) {
-          d.char = null; d.wait = 0; d.atten = 0; d.prox = 0; d.leaving = false;
+          d.char = null; d.wait = 0; d.atten = 0; d.prox = 0; d.leaving = false; d.approach = 0; d.chargeState = 'full';
         }
       }
+
+      // carga da lâmpada: consome enquanto ligada e alguém está na porta; recarrega quando a porta está vazia
+      if (d.char && !d.leaving) {
+        d.chargeTimer = 0;
+        if (d.light && d.charge > 0) {
+          d.charge = Math.max(0, d.charge - dt / 7.5);       // ~7,5 s de luz plena
+          if (d.charge <= 0) {
+            d.chargeState = 'empty';
+            d.light = false;                                  // lâmpada apaga sozinha e só volta a funcionar após recarregar
+            AUDIO.lightHum(side, false);
+          } else if (d.charge < 0.35) d.chargeState = 'low';
+          else d.chargeState = 'full';
+        }
+      } else {
+        // porta vazia: lâmpada recupera devagar
+        d.chargeTimer = Math.max(0, d.chargeTimer + dt);
+        if (d.chargeTimer > 1.2) {
+          d.charge = Math.min(1, d.charge + dt / 10);        // ~10 s para carga cheia
+          if (d.charge >= 1) d.chargeState = 'full';
+          else if (d.charge < 0.35) d.chargeState = 'low';
+          else d.chargeState = 'full';
+        }
+      }
+
+      // aproximação do amigo (só enquanto ele está lá): avança sempre que não está sendo impedido
+      if (d.char && !d.leaving) {
+        const attending = Math.abs(wrap(ART.ROOM.doors[side].angle - S.yaw)) < 0.42 && S.holdE && eTarget() === 'door' && d.atten != null && d.atten < 1;
+        const blocked = d.light && d.charge > 0;             // luz acesa com carga: amigo para
+        if (!attending && !blocked) {
+          const baseAppr = d.apprRate || (1 / 95);           // ~95 s até chegar na soleira sem resistência
+          d.approach = Math.min(1, (d.approach || 0) + dt * baseAppr);
+          // passos ecoando no corredor — ritmo acelera conforme ele se aproxima
+          d.stepAcc = (d.stepAcc || 0) + dt;
+          const every = Math.max(0.6, 2.3 - (d.approach || 0) * 1.75);
+          if (d.stepAcc >= every) {
+            d.stepAcc = 0;
+            const rel = wrap(ART.ROOM.doors[side].angle - S.yaw);
+            const pan = Math.abs(rel) < 0.18 ? 0 : Math.max(-0.85, Math.min(0.85, rel / 1.2));
+            if (AUDIO.stepFar) AUDIO.stepFar(pan, 0.2 + (d.approach || 0) * 0.8);
+          }
+        } else {
+          d.stepAcc = 0;
+        }
+      } else if (!d.char) {
+        d.approach = 0;
+        d.stepAcc = 0;
+      }
+
       // tempo de vida do balão de fala
       if (d.bubbleT > 0) d.bubbleT = Math.max(0, d.bubbleT - dt);
     });
@@ -1443,6 +1507,14 @@ function shuffle(a) {
     const d = S.doors[side];
     const att = d.atten || 0;
     $('daFill').style.width = Math.round(att * 100) + '%';
+    // barra de carga da luz desta porta
+    const charge = d.charge == null ? 1 : Math.max(0, Math.min(1, d.charge));
+    const lf = $('daLightFill');
+    if (lf) {
+      lf.style.width = Math.round(charge * 100) + '%';
+      lf.classList.toggle('warn', charge < 0.35 && charge > 0);
+      lf.classList.toggle('crit', charge <= 0);
+    }
     el.classList.add('facing');
   }
 
