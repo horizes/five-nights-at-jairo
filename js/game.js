@@ -2047,6 +2047,12 @@ function shuffle(a) {
     setScreen('title');
     $('black').style.opacity = '0';
     requestAnimationFrame(loop);
+    // link direto: ?night=N abre o jogo já na noite N (1–7)
+    try {
+      const q = new URLSearchParams(location.search || '');
+      const n = parseInt(q.get('night'), 10);
+      if (n >= 1 && n <= 7) setTimeout(() => startNight(n), 250);
+    } catch (e) { /* ignora — menu normal */ }
   }
 
   return {
