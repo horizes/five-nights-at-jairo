@@ -764,12 +764,26 @@ function shuffle(a) {
       if (!arr.includes(id)) arr.push(id);
       S.cameras[room] = arr;
     }
-    // sincroniza roaming / pos
+    // sincroniza roaming / pos — sorteia uma vaga pessoal daquele amigo naquela sala
     if (S.chars[id]) { S.chars[id].pos = room; S.chars[id].arrived = true; }
     if (id === 're' && S.re) { S.re.pos = room; S.re.arrived = true; }
-    if (room != null) {
+    if (room != null && S.roaming) {
       S.camGlitchT = Math.max(S.camGlitchT || 0, 0.9); // câmeras piscam quando alguém se move
-      S.roaming[id] = { room, t: 0, max: 8 + Math.random() * 6, x: (Math.random() * 2 - 1) * 55 };
+      // vagas possíveis (±550) — escolhe uma livre, descontando quem já está na sala;
+      // quem estava fica onde está, quem chega ocupa uma vaga aleatória restante
+      const SLOT_X = [-540, -415, -290, -160, 0, 160, 290, 415, 540];
+      const taken = new Set();
+      const arr = S.cameras[room];
+      if (Array.isArray(arr)) {
+        arr.forEach(fid => {
+          if (fid === id) return;
+          const r = S.roaming[fid];
+          if (r && typeof r.slotX === 'number') taken.add(r.slotX);
+        });
+      }
+      const free = SLOT_X.filter(x => !taken.has(x));
+      const slotX = free.length ? free[(Math.random() * free.length) | 0] : SLOT_X[(Math.random() * SLOT_X.length) | 0];
+      S.roaming[id] = { room, t: 0, max: 8 + Math.random() * 6, x: slotX, slotX };
     }
   }
   /* câmera reproduz áudio atraindo amigos das salas adjacentes para a sala atual —

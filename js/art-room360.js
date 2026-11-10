@@ -1333,13 +1333,14 @@
     friends.forEach(fid => { if (fid !== corridorDoorFriend) drawList.push({ id: fid, door: false }); });
     if (corridorDoorFriend && corridorDoorEnter > 0.45) drawList.push({ id: corridorDoorFriend, door: true });
     if (drawList.length) {
-      const N = drawList.length, STEP = 380, SPAN = (N - 1) * STEP;
+      // cada amigo aparece numa posição aleatória própria da sala (sorteada ao entrar)
       drawList.forEach((item, i) => {
-        const slot = VW / 2 - SPAN / 2 + i * STEP;
         const r = S.roaming && S.roaming[item.id];
-        const jitter = r && typeof r.x === 'number' ? Math.max(-60, Math.min(60, r.x)) : 0;
-        const wave = Math.sin(t * 1.2 + i * 1.7) * 3;
-        const cx = slot + jitter + wave;
+        const base = r && typeof r.slotX === 'number' ? r.slotX : ((i * 260) - 260);
+        const spot = item.door ? base * 0.32 : base;           // na porta fica perto da boca do corredor
+        const phase = (item.id.charCodeAt(0) + item.id.length * 13 + 5) * 0.9;
+        const wave = Math.sin(t * 1.15 + phase) * 4;
+        const cx = VW / 2 + spot + wave;
         if (item.door) {
           // no fundo do corredor, de costas, para a porta da sala
           const doorSide = corridorDoorSide;
