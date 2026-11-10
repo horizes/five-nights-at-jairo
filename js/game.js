@@ -1387,10 +1387,13 @@ function shuffle(a) {
           else d.chargeState = 'full';
         }
       } else {
-        // luz apagada: lâmpada recupera devagar
+        // luz apagada: lâmpada recupera — mais rápido se não chegou a zerar, mais lento de 0
         d.chargeTimer = (d.chargeTimer || 0) + dt;
-        if (d.chargeTimer > 1.2) {
-          d.charge = Math.min(1, (d.charge == null ? 1 : d.charge) + dt / 10);   // ~10 s para carga cheia
+        const depleted = (d.charge == null ? 1 : d.charge) <= 0;
+        const need     = depleted ? 2.0 : 1.2;                       // de 0 demora mais para começar a voltar
+        const speed    = depleted ? 1 / 16 : 1 / 6;                 // de 0 leva ~16 s; de carga parcial ~6 s
+        if (d.chargeTimer > need) {
+          d.charge = Math.min(1, (d.charge == null ? 1 : d.charge) + dt * speed);
           if (d.charge >= 1) d.chargeState = 'full';
           else if (d.charge < 0.35) d.chargeState = d.charge <= 0 ? 'empty' : 'low';
           else d.chargeState = 'full';
