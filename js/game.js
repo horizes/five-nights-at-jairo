@@ -37,17 +37,17 @@ const GAME = (function () {
     6: { hori: 8, akira: 14, leo: 14, re: 13 }
   };
 
-  const QUOTA = { 1: 4, 2: 5, 3: 5, 4: 6, 5: 7, 6: 8, 7: 6 };
+  const QUOTA = { 1: 4, 2: 5, 3: 5, 4: 6, 5: 6, 6: 6, 7: 6 };
 
   /* curva de dificuldade da campanha:
-     1 = tutorial/fácil · 2-3 = médias · 4-5 = bem difíceis · 6 = super difícil */
+     1 = tutorial/fácil · 2-3 = médias · 4-5 = bem difíceis · 6 = super difícil — no limite do humanamente possível */
   const DIFF = {
     1: { mult: 1.00, ai: 1.00, patience: 10.0, atten: 1.5, decay: 1.2, gap: 19 },
     2: { mult: 1.05, ai: 1.15, patience: 8.0,  atten: 2.0, decay: 1.4, gap: 17 },
     3: { mult: 1.12, ai: 1.30, patience: 6.5,  atten: 2.5, decay: 1.7, gap: 15 },
-    4: { mult: 1.25, ai: 1.55, patience: 4.8,  atten: 3.5, decay: 2.2, gap: 12 },
-    5: { mult: 1.35, ai: 1.75, patience: 3.8,  atten: 4.5, decay: 2.7, gap: 10 },
-    6: { mult: 1.45, ai: 2.00, patience: 3.0,  atten: 5.5, decay: 3.4, gap: 7  }
+    4: { mult: 1.15, ai: 1.55, patience: 5.0,  atten: 3.0, decay: 2.0, gap: 12 },
+    5: { mult: 1.20, ai: 1.70, patience: 4.0,  atten: 3.5, decay: 2.5, gap: 10 },
+    6: { mult: 1.25, ai: 1.85, patience: 3.5,  atten: 4.0, decay: 3.0, gap: 7  }
   };
   function diffOf(night) {
     const n = night | 0;
