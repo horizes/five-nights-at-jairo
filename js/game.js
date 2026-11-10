@@ -923,7 +923,11 @@ function shuffle(a) {
 
   function retreat(id, side) {
     const d = S.doors[side];
-    if (d.char === id) { d.leaving = true; } // a animação de saída cuida do "char = null" quando terminar
+    // o amigo recua DE ONDE ESTÁ: a animação de saída começa do progresso atual, não do fundo do corredor
+    if (d.char === id) {
+      d.leaving = true;
+      d.enterT = Math.max(0.05, Math.min(1, (d.approach == null ? 1 : d.approach)));
+    }
     const ch = id === 're' ? S.re : S.chars[id];
     ch.targetDoor = Math.random() < 0.5 ? 'F' : 'B'; // nova porta a procurar, mas só após a volta
     S.shake = Math.max(S.shake, 3);
