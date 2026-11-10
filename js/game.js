@@ -769,9 +769,8 @@ function shuffle(a) {
     if (id === 're' && S.re) { S.re.pos = room; S.re.arrived = true; }
     if (room != null && S.roaming) {
       S.camGlitchT = Math.max(S.camGlitchT || 0, 0.9); // câmeras piscam quando alguém se move
-      // vagas possíveis (±550) — escolhe uma livre, descontando quem já está na sala;
-      // quem estava fica onde está, quem chega ocupa uma vaga aleatória restante
-      const SLOT_X = [-540, -415, -290, -160, 0, 160, 290, 415, 540];
+      // vagas bem espaçadas: nenhum dois bonecos ficam colados
+      const SLOT_X = [-640, -320, 0, 320, 640];
       const taken = new Set();
       const arr = S.cameras[room];
       if (Array.isArray(arr)) {
