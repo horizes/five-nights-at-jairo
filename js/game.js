@@ -43,11 +43,11 @@ const GAME = (function () {
      1 = tutorial/fácil · 2-3 = médias · 4-5 = bem difíceis · 6 = super difícil — no limite do humanamente possível */
   const DIFF = {
     1: { mult: 1.00, ai: 1.00, patience: 10.0, atten: 1.5, decay: 1.2, gap: 19 },
-    2: { mult: 1.05, ai: 1.17, patience:  8.0, atten: 2.0, decay: 1.5, gap: 17 },
-    3: { mult: 1.10, ai: 1.34, patience:  6.5, atten: 2.5, decay: 1.8, gap: 15 },
-    4: { mult: 1.15, ai: 1.51, patience:  5.3, atten: 3.0, decay: 2.1, gap: 12 },
-    5: { mult: 1.20, ai: 1.68, patience:  4.4, atten: 3.4, decay: 2.5, gap: 10 },
-    6: { mult: 1.25, ai: 1.85, patience:  3.9, atten: 3.8, decay: 3.0, gap:  7 }
+    2: { mult: 1.02, ai: 1.17, patience:  8.0, atten: 2.0, decay: 1.5, gap: 17 },
+    3: { mult: 1.04, ai: 1.34, patience:  6.5, atten: 2.5, decay: 1.8, gap: 15 },
+    4: { mult: 1.06, ai: 1.51, patience:  5.3, atten: 3.0, decay: 2.1, gap: 12 },
+    5: { mult: 1.08, ai: 1.68, patience:  4.4, atten: 3.4, decay: 2.5, gap: 10 },
+    6: { mult: 1.10, ai: 1.85, patience:  3.9, atten: 3.8, decay: 3.0, gap:  7 }
   };
   /* aceita frações: usado pela noite personalizada (interpola a curva da campanha) */
   function diffOf(night) {
@@ -143,9 +143,9 @@ function shuffle(a) {
   function nightJobMult(night, levels) {
     if ((night | 0) >= 7) {
       const avg = ['hori', 'akira', 'leo', 're'].reduce((a, k) => a + Math.max(0, Math.min(20, ((levels || {})[k]) | 0)), 0) / 4;
-      return diffOf(1 + (avg / 20) * 5).mult;      // personalizada: interpola a curva da campanha (1,00 … 1,25)
+      return diffOf(1 + (avg / 20) * 5).mult;      // personalizada: interpola a curva da campanha (1,00 … 1,10)
     }
-    return diffOf(night).mult;                     // campanha: curva por noite (1,00 … 1,25)
+    return diffOf(night).mult;                     // campanha: curva por noite (1,00 … 1,10)
   }
 
   /* ---------------- ligações do pai ---------------- */
@@ -775,19 +775,6 @@ function shuffle(a) {
       S.roaming[id] = { room, t: 0, max: 8 + Math.random() * 6, x: (Math.random() * 2 - 1) * 55 };
     }
   }
-  function clearFromCameras(id) {
-    if (!S || !S.cameras) return;
-    for (let i = 0; i < S.cameras.length; i++) {
-      const arr = S.cameras[i];
-      if (Array.isArray(arr)) {
-        const ix = arr.indexOf(id);
-        if (ix !== -1) arr.splice(ix, 1);
-      } else if (arr === id) S.cameras[i] = null;
-    }
-    if (S.roaming) S.roaming[id] = null;
-    if (S.chars[id]) { /* mantém pos */ }
-  }
-
   /* câmera reproduz áudio atraindo amigos das salas adjacentes para a sala atual —
      o efeito é apenas sonoro: o jogador descobre a atração pela câmera, não por texto */
   function lureToCamera() {
@@ -912,7 +899,7 @@ function shuffle(a) {
       if (nb.length) next = nb[(Math.random() * nb.length) | 0];
     }
     if (next === 'F' || next === 'B') {
-      if (arriveAtDoor(id, next)) clearFromCameras(id);
+      arriveAtDoor(id, next);
     } else if (typeof next === 'number') {
       setCamPos(id, next);
     }
@@ -931,9 +918,7 @@ function shuffle(a) {
     S.shake = Math.max(S.shake, 3);
     AUDIO.doorCreak();
     AUDIO.attentionDone();
-    // recua para a sala vizinha da porta (sem pular salas) e dá uma volta pela gráfica antes de procurar porta de novo
-    const near = side === 'F' ? 7 : 8;
-    setCamPos(id, near);
+    // o amigo recua DE ONDE ESTÁ: continua visível na sala da porta e a animação de saída o afasta
     startTour(id);
     ch.timer = Math.max(1.8, interval(id) * 0.55);
   }
