@@ -795,7 +795,7 @@ function shuffle(a) {
     b.classList.toggle('cooling', cd > 0 || (S && S.out.active));
     b.classList.toggle('ready', ready);
     const txt = b.querySelector('.clTxt');
-    if (txt) txt.textContent = cd > 0 ? ('ÁUDIO ' + cd + 's') : 'TOCAR ÁUDIO';
+    if (txt) txt.textContent = 'TOCAR ÁUDIO';
   }
 
   /* caminho BFS entre salas e portas ('F' / 'B') */
