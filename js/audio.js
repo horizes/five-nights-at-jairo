@@ -10,6 +10,19 @@ const AUDIO = (function () {
   const lightHum = { F: null, B: null };
   let muted = false;
   let mbTimer = null, mbOn = false;
+  /* escuta dinâmica: o panner de cada fonte acompanha a rotação da câmera em tempo real */
+  let listenerYaw = 0;
+  const livePanners = new Set();
+  function wrapPi(a) {
+    a = a % (Math.PI * 2);
+    if (a > Math.PI) a -= Math.PI * 2;
+    if (a < -Math.PI) a += Math.PI * 2;
+    return a;
+  }
+  function panFor(angle) {
+    const d = wrapPi(angle - listenerYaw);
+    return Math.max(-0.88, Math.min(0.88, d / 1.2));
+  }
 
   const ok = () => !!ac && !muted;
 
@@ -69,9 +82,17 @@ const AUDIO = (function () {
     g.gain.linearRampToValueAtTime(gain, t0 + atk);
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
     s.connect(f); f.connect(g);
-    if (o.pan != null && ac.createStereoPanner) {
+    if (o.pan != null || o.angle != null) {
       const p = ac.createStereoPanner();
-      p.pan.value = o.pan;
+      if (o.angle != null) {
+        // pan dinâmico: acompanha a rotação da câmera enquanto o som toca
+        const entry = { angle: o.angle, p };
+        livePanners.add(entry);
+        p.pan.value = panFor(o.angle);
+        s.onended = () => livePanners.delete(entry);
+      } else {
+        p.pan.value = o.pan;
+      }
       g.connect(p); p.connect(master);
     } else {
       g.connect(master);
@@ -93,9 +114,16 @@ const AUDIO = (function () {
     g.gain.linearRampToValueAtTime(gain, t0 + Math.min(o.attack || 0.01, dur * 0.5));
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
     osc.connect(g);
-    if (o.pan != null && ac.createStereoPanner) {
+    if (o.pan != null || o.angle != null) {
       const p = ac.createStereoPanner();
-      p.pan.value = o.pan;
+      if (o.angle != null) {
+        const entry = { angle: o.angle, p };
+        livePanners.add(entry);
+        p.pan.value = panFor(o.angle);
+        osc.onended = () => livePanners.delete(entry);
+      } else {
+        p.pan.value = o.pan;
+      }
       g.connect(p); p.connect(master);
     } else {
       g.connect(master);
@@ -197,25 +225,31 @@ const AUDIO = (function () {
         }, delayMs);
       }
     },
-    stepFar(pan, vol) {
-      // passo rústico de bota pesada no corredor — estalo duro, corpo fundo, madeira do piso
-      if (pan == null || isNaN(pan)) pan = 0;
-      pan = Math.max(-0.9, Math.min(0.9, pan));
+    stepFar(angle, vol, who) {
+      // passo rústico de bota pesada — timbre próprio por amigo; pan dinâmico acompanha a câmera
       if (!ok()) return;
       const v = vol == null ? 0.5 : Math.max(0.08, Math.min(1, vol));
-      const side = walkStepAlt ? -0.15 : 0.15;
+      /* cada amigo pisa de um jeito: hori pesado · akira seco e alto · leo fundos · re levíssima */
+      const W = {
+        hori:  { f: 0.86, g: 1.0 },
+        akira: { f: 1.14, g: 0.8 },
+        leo:   { f: 0.72, g: 1.25 },
+        re:    { f: 1.22, g: 0.7 }
+      }[who] || { f: 1.0, g: 1.0 };
+      const side = walkStepAlt ? -0.14 : 0.14;
       walkStepAlt = !walkStepAlt;
-      const p = Math.max(-0.95, Math.min(0.95, pan + side));
-      const f = 0.88 + Math.random() * 0.24;
+      const a = (angle || 0) + side;
+      const f = W.f * (0.9 + Math.random() * 0.2);
+      const vm = v * W.g;
       // estalo duro do salto contra o piso (presença)
-      burst({ dur: 0.075, freq: 950 * f, q: 2.6, gain: 0.52 * v, type: 'bandpass', pan: p });
+      burst({ dur: 0.075, freq: 950 * f, q: 2.6, gain: 0.52 * vm, type: 'bandpass', angle: a });
       // batida funda da sola (corpo do passo)
-      burst({ dur: 0.14, freq: 190 * f, q: 1.4, gain: 0.58 * v, type: 'lowpass', brown: true, pan: p });
-      tone({ freq: 64 * f, to: 44, dur: 0.16, gain: 0.42 * v, type: 'triangle', pan: p });
+      burst({ dur: 0.14, freq: 190 * f, q: 1.4, gain: 0.58 * vm, type: 'lowpass', brown: true, angle: a });
+      tone({ freq: 64 * f, to: 44, dur: 0.16, gain: 0.42 * vm, type: 'triangle', angle: a });
       // ressonância de madeira do piso (o "tock" rústico)
-      burst({ dur: 0.1, freq: 480 * f, q: 4.6, gain: 0.34 * v, type: 'bandpass', pan: p });
+      burst({ dur: 0.1, freq: 480 * f, q: 4.6, gain: 0.34 * vm, type: 'bandpass', angle: a });
       // eco curto e arenoso do corredor
-      burst({ dur: 0.3, freq: 240 * f, q: 2.0, gain: 0.13 * v, type: 'lowpass', brown: true, delay: 0.12, pan: p });
+      burst({ dur: 0.3, freq: 240 * f, q: 2.0, gain: 0.13 * vm, type: 'lowpass', brown: true, delay: 0.12, angle: a });
     },
     doorCreak() {
       if (!ok()) return;
@@ -336,10 +370,25 @@ const AUDIO = (function () {
           const s = ac.createOscillator(); s.type = 'sawtooth'; s.frequency.value = 118;
           const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 900;
           const g = ac.createGain(); g.gain.value = 0.0001;
-          s.connect(f); f.connect(g); g.connect(master); s.start();
-          return { s, f, g };
+          s.connect(f); f.connect(g); s.start();
+          let entry = null;
+          if (ac.createStereoPanner) {
+            const p = ac.createStereoPanner();
+            const angle = side === 'F' ? 0 : Math.PI;
+            entry = { angle, p };
+            livePanners.add(entry);
+            p.pan.value = panFor(angle);
+            g.connect(p); p.connect(master);
+          } else {
+            g.connect(master);
+          }
+          return { s, f, g, panEntry: entry };
         }, 0.02, 0.1);
-      } else { killNode(lightHum[side], 0.1); lightHum[side] = null; }
+      } else {
+        const n = lightHum[side];
+        if (n && n.panEntry) livePanners.delete(n.panEntry);
+        killNode(n, 0.1); lightHum[side] = null;
+      }
     },
     powerDown() {
       tone({ freq: 220, to: 28, dur: 2.2, gain: 0.45, type: 'sawtooth' });
@@ -678,9 +727,17 @@ const AUDIO = (function () {
     });
   }
 
+  function setListener(yaw) {
+    listenerYaw = yaw || 0;
+    const t = ac ? ac.currentTime : 0;
+    livePanners.forEach(e => {
+      try { e.p.pan.setTargetAtTime(panFor(e.angle), t, 0.04); } catch (x) { /* ignore */ }
+    });
+  }
+
   return {
     init, unlock, setMuted, isMuted, stopAll, pauseAll, resumeAll,
-    startRoom, stopRoom, musicBox,
+    startRoom, stopRoom, musicBox, setListener,
     ...S,
     ring: (...a) => S.ring(...a),
     phoneStatic: (...a) => S.phoneStatic(...a),

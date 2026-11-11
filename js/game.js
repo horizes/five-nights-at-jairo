@@ -956,9 +956,7 @@ function shuffle(a) {
       ? 0.9 + Math.random() * 1.6 + (customEffNight(id) - 1) * 0.12   // igual à campanha na "noite" equivalente
       : 0.9 + Math.random() * 1.6 + (S.night - 1) * 0.12;   // cada aparição exige atenção aleatória
     // porta avisa por som: passos de bota pesada se aproximando pela soleira (mesmo timbre do caminhar)
-    const rel = wrap(ART.ROOM.doors[side].angle - S.yaw);
-    const pan = Math.abs(rel) < 0.18 ? 0 : Math.max(-0.85, Math.min(0.85, rel / 1.2));
-    [0.55, 0.75, 1.0].forEach((v, i) => setTimeout(() => { if (AUDIO.stepFar) AUDIO.stepFar(pan, v); }, i * 330));
+    [0.55, 0.75, 1.0].forEach((v, i) => setTimeout(() => { if (AUDIO.stepFar) AUDIO.stepFar(ART.ROOM.doors[side].angle, v, id); }, i * 330));
     S.shake = Math.max(S.shake, 6);
     return true;
   }
@@ -1362,6 +1360,7 @@ function shuffle(a) {
     if (S.ended) return;
 
     S.t += dt;
+    if (AUDIO.setListener) AUDIO.setListener(S.yaw);   // pan estéreo acompanha a câmera em tempo real
     if (S.camGlitchT > 0) S.camGlitchT = Math.max(0, S.camGlitchT - dt);
     if (S.lureCd > 0) { S.lureCd = Math.max(0, S.lureCd - dt); }
     refreshLureBtn();
@@ -1397,9 +1396,7 @@ function shuffle(a) {
           d.stepAcc = (d.stepAcc || 0) + dt;
           if (d.stepAcc >= 0.34) {
             d.stepAcc = 0;
-            const rel = wrap(ART.ROOM.doors[side].angle - S.yaw);
-            const pan = Math.abs(rel) < 0.18 ? 0 : Math.max(-0.85, Math.min(0.85, rel / 1.2));
-            if (AUDIO.stepFar) AUDIO.stepFar(pan, 0.34 + (1 - d.enterT) * 0.38);
+            if (AUDIO.stepFar) AUDIO.stepFar(ART.ROOM.doors[side].angle, 0.34 + (1 - d.enterT) * 0.38, d.char);
           }
         }
         if (d.enterT === 0 && d.char) {
@@ -1449,9 +1446,7 @@ function shuffle(a) {
           const every = 0.56;
           if (d.stepAcc >= every) {
             d.stepAcc = 0;
-            const rel = wrap(ART.ROOM.doors[side].angle - S.yaw);
-            const pan = Math.abs(rel) < 0.18 ? 0 : Math.max(-0.85, Math.min(0.85, rel / 1.2));
-            if (AUDIO.stepFar) AUDIO.stepFar(pan, 0.3 + (d.approach || 0) * 0.85);
+            if (AUDIO.stepFar) AUDIO.stepFar(ART.ROOM.doors[side].angle, 0.3 + (d.approach || 0) * 0.85, d.char);
           }
         } else {
           d.stepAcc = 0;
