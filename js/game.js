@@ -1513,12 +1513,11 @@ function shuffle(a) {
       b.classList.toggle('active', !!isActive);
     });
 
-    // sons ambientes
+    // sons ambientes — sem batidas: a porta avisa apenas pelos passos do amigo
     S.ambient -= dt;
     if (S.ambient <= 0) {
       S.ambient = 9 + Math.random() * 16;
-      if (Math.random() < 0.55) AUDIO.step();
-      else if (Math.random() < 0.4) AUDIO.knock();
+      if (Math.random() < 0.6) AUDIO.step();
     }
 
     S.shake = Math.max(0, S.shake - dt * 45);
