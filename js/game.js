@@ -1392,8 +1392,18 @@ function shuffle(a) {
       // amigo recuando para fora da porta (saída)
       if (d.leaving) {
         d.enterT = Math.max(0, (d.enterT == null ? 1 : d.enterT) - dt / 1.15);
+        // passos de costas um pouco mais rápidos até terminar de recuar
+        if (d.enterT > 0.15 && d.char) {
+          d.stepAcc = (d.stepAcc || 0) + dt;
+          if (d.stepAcc >= 0.34) {
+            d.stepAcc = 0;
+            const rel = wrap(ART.ROOM.doors[side].angle - S.yaw);
+            const pan = Math.abs(rel) < 0.18 ? 0 : Math.max(-0.85, Math.min(0.85, rel / 1.2));
+            if (AUDIO.stepFar) AUDIO.stepFar(pan, 0.34 + (1 - d.enterT) * 0.38);
+          }
+        }
         if (d.enterT === 0 && d.char) {
-          d.char = null; d.wait = 0; d.atten = 0; d.prox = 0; d.leaving = false; d.approach = 0;
+          d.char = null; d.wait = 0; d.atten = 0; d.prox = 0; d.leaving = false; d.approach = 0; d.stepAcc = 0;
         }
       }
 
@@ -1434,14 +1444,14 @@ function shuffle(a) {
         if (!attending && !blocked) {
           const baseAppr = d.apprRate || (1 / 95);           // ~95 s até chegar na soleira sem resistência
           d.approach = Math.min(1, (d.approach || 0) + dt * baseAppr);
-          // passos ecoando no corredor — ritmo acelera conforme ele se aproxima
+          // passos ecoando pelo corredor — ritmo constante durante todo o trajeto
           d.stepAcc = (d.stepAcc || 0) + dt;
-          const every = Math.max(0.6, 2.3 - (d.approach || 0) * 1.75);
+          const every = 0.56;
           if (d.stepAcc >= every) {
             d.stepAcc = 0;
             const rel = wrap(ART.ROOM.doors[side].angle - S.yaw);
             const pan = Math.abs(rel) < 0.18 ? 0 : Math.max(-0.85, Math.min(0.85, rel / 1.2));
-            if (AUDIO.stepFar) AUDIO.stepFar(pan, 0.2 + (d.approach || 0) * 0.8);
+            if (AUDIO.stepFar) AUDIO.stepFar(pan, 0.22 + (d.approach || 0) * 0.78);
           }
         } else {
           d.stepAcc = 0;

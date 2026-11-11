@@ -648,7 +648,7 @@
       const scMax = 1.62;                                    // corpo inteiro na soleira
       const sc = scMax * (0.08 + 0.92 * ease);               // longe = sombra minúscula
       const byFar = y + h * 0.56;                            // fundo do corredor (lá na escuridão)
-      const byNear = y + h + 10 + ease * 4;                  // NA PORTA — nunca entra para dentro da sala
+      const byNear = y + h + 2 + ease * 2;                   // NA PORTA — nunca entra para dentro da sala
       const by = byFar + (byNear - byFar) * ease;
       const sway = Math.sin(t * 2.15 + st.char.length) * (1 - ease * 0.6) * 8;
       A.mascot(g, st.char, {
@@ -660,7 +660,7 @@
       const darkness = (1 - ease) * (lit ? 0.5 : 0.78);
       if (darkness > 0.03) {
         g.fillStyle = 'rgba(2,3,4,' + darkness.toFixed(3) + ')';
-        g.fillRect(x, y, w, h + 100);
+        g.fillRect(x, y, w, h);
       }
 
       // balão de fala (aparece aleatoriamente enquanto você encara o amigo) — segue o amigo fisicamente,
@@ -1346,8 +1346,10 @@
           if (item.door) {
             spot = Math.sin(t * 1.25) * 6;                                   // centrado na boca da porta
           } else {
-            // residente: fica encostado de um lado, fora da boca da porta e longe do mapa
-            spot = (base < 0 ? -1 : 1) * (175 + (Math.abs(base) % 165));
+            // residente: alterna lados e abre espaço — nenhum dois ficam colados
+            const left = (i % 2) === 0;
+            const depth = Math.floor(i / 2);
+            spot = (left ? -1 : 1) * (280 + depth * 230);
           }
         } else {
           // fora do corredor os amigos podem ficar sob a área do mapa — o mapa é opaco e desenhado por cima do canvas
