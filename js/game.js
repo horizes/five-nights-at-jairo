@@ -956,7 +956,7 @@ function shuffle(a) {
       ? 0.9 + Math.random() * 1.6 + (customEffNight(id) - 1) * 0.12   // igual à campanha na "noite" equivalente
       : 0.9 + Math.random() * 1.6 + (S.night - 1) * 0.12;   // cada aparição exige atenção aleatória
     // porta avisa por som: passos de bota pesada se aproximando pela soleira (mesmo timbre do caminhar)
-    [0.55, 0.75, 1.0].forEach((v, i) => setTimeout(() => { if (AUDIO.stepFar) AUDIO.stepFar(ART.ROOM.doors[side].angle, v, id); }, i * 330));
+    [0.55, 0.75, 1.0].forEach((v, i) => setTimeout(() => { if (AUDIO.stepFar) AUDIO.stepFar(ART.ROOM.doors[side].angle, v); }, i * 330));
     S.shake = Math.max(S.shake, 6);
     return true;
   }
@@ -1178,6 +1178,7 @@ function shuffle(a) {
     setScreen('over');
     S.jumping = null;
     AUDIO.stopAll();
+    AUDIO.badEnd();                         // motivo curto da noite perdida — só as 4 primeiras notas
   }
 
   function endOfNight() {
@@ -1221,7 +1222,7 @@ function shuffle(a) {
       const menu = document.querySelector('#scr-win .menu');
       if (menu) menu.style.display = 'none';
       setTimeout(() => { if (S && S.ended) { drawEnding(good); setScreen('end'); } }, 4200);
-      setTimeout(() => { if (S) setScreen('title'); }, 12500);
+      setTimeout(() => { if (S) { AUDIO.stopAll(); setScreen('title'); } }, 12500);
     } else {
       if (h2) { h2.textContent = '6:00 AM'; h2.className = 'gold'; }
       const menu = document.querySelector('#scr-win .menu');
@@ -1239,6 +1240,8 @@ function shuffle(a) {
 
   /* ---------------- telas de final ilustrado ---------------- */
   function drawEnding(good) {
+    // tema completo do final toca apenas na tela final — bom ou ruim
+    if (good) AUDIO.sixAMFull(); else AUDIO.badEndFull();
     const c = document.getElementById('endCanvas');
     if (!c) return;
     const g = c.getContext('2d');
@@ -1396,7 +1399,7 @@ function shuffle(a) {
           d.stepAcc = (d.stepAcc || 0) + dt;
           if (d.stepAcc >= 0.34) {
             d.stepAcc = 0;
-            if (AUDIO.stepFar) AUDIO.stepFar(ART.ROOM.doors[side].angle, 0.34 + (1 - d.enterT) * 0.38, d.char);
+            if (AUDIO.stepFar) AUDIO.stepFar(ART.ROOM.doors[side].angle, 0.34 + (1 - d.enterT) * 0.38);
           }
         }
         if (d.enterT === 0 && d.char) {
@@ -1446,7 +1449,7 @@ function shuffle(a) {
           const every = 0.56;
           if (d.stepAcc >= every) {
             d.stepAcc = 0;
-            if (AUDIO.stepFar) AUDIO.stepFar(ART.ROOM.doors[side].angle, 0.3 + (d.approach || 0) * 0.85, d.char);
+            if (AUDIO.stepFar) AUDIO.stepFar(ART.ROOM.doors[side].angle, 0.3 + (d.approach || 0) * 0.85);
           }
         } else {
           d.stepAcc = 0;

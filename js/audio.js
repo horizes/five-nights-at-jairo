@@ -125,6 +125,8 @@ const AUDIO = (function () {
         p.pan.value = o.pan;
       }
       g.connect(p); p.connect(master);
+    } else if (o.bus) {
+      g.connect(o.bus);                                   // saída dedicada (música dos finais)
     } else {
       g.connect(master);
     }
@@ -225,31 +227,23 @@ const AUDIO = (function () {
         }, delayMs);
       }
     },
-    stepFar(angle, vol, who) {
-      // passo rústico de bota pesada — timbre próprio por amigo; pan dinâmico acompanha a câmera
+    stepFar(angle, vol) {
+      // passo rústico de bota pesada — um único timbre cuja intensidade varia com a proximidade da porta
       if (!ok()) return;
       const v = vol == null ? 0.5 : Math.max(0.08, Math.min(1, vol));
-      /* cada amigo pisa de um jeito: hori pesado · akira seco e alto · leo fundos · re levíssima */
-      const W = {
-        hori:  { f: 0.86, g: 1.0 },
-        akira: { f: 1.14, g: 0.8 },
-        leo:   { f: 0.72, g: 1.25 },
-        re:    { f: 1.22, g: 0.7 }
-      }[who] || { f: 1.0, g: 1.0 };
       const side = walkStepAlt ? -0.14 : 0.14;
       walkStepAlt = !walkStepAlt;
       const a = (angle || 0) + side;
-      const f = W.f * (0.9 + Math.random() * 0.2);
-      const vm = v * W.g;
+      const f = 0.88 + Math.random() * 0.24;
       // estalo duro do salto contra o piso (presença)
-      burst({ dur: 0.075, freq: 950 * f, q: 2.6, gain: 0.52 * vm, type: 'bandpass', angle: a });
+      burst({ dur: 0.075, freq: 950 * f, q: 2.6, gain: 0.52 * v, type: 'bandpass', angle: a });
       // batida funda da sola (corpo do passo)
-      burst({ dur: 0.14, freq: 190 * f, q: 1.4, gain: 0.58 * vm, type: 'lowpass', brown: true, angle: a });
-      tone({ freq: 64 * f, to: 44, dur: 0.16, gain: 0.42 * vm, type: 'triangle', angle: a });
+      burst({ dur: 0.14, freq: 190 * f, q: 1.4, gain: 0.58 * v, type: 'lowpass', brown: true, angle: a });
+      tone({ freq: 64 * f, to: 44, dur: 0.16, gain: 0.42 * v, type: 'triangle', angle: a });
       // ressonância de madeira do piso (o "tock" rústico)
-      burst({ dur: 0.1, freq: 480 * f, q: 4.6, gain: 0.34 * vm, type: 'bandpass', angle: a });
+      burst({ dur: 0.1, freq: 480 * f, q: 4.6, gain: 0.34 * v, type: 'bandpass', angle: a });
       // eco curto e arenoso do corredor
-      burst({ dur: 0.3, freq: 240 * f, q: 2.0, gain: 0.13 * vm, type: 'lowpass', brown: true, delay: 0.12, angle: a });
+      burst({ dur: 0.3, freq: 240 * f, q: 2.0, gain: 0.13 * v, type: 'lowpass', brown: true, delay: 0.12, angle: a });
     },
     doorCreak() {
       if (!ok()) return;
@@ -435,8 +429,31 @@ const AUDIO = (function () {
       // eco curto
       burst({ dur: 0.28, freq: 850, q: 0.7, gain: 0.5, type: 'bandpass', delay: 0.5 });
     },
-    sixAM() { endingTheme(GOOD_NOTES, { type: 'triangle', gain: 0.16, octGain: 0.05, pad: [130.81, 196.0, 261.63] }); },
-    badEnd() { endingTheme(BAD_NOTES, { type: 'sine', gain: 0.155, octGain: 0.045, pad: [110.0, 164.81, 220.0] }); },
+    // noite sobreviada / perdida: apenas as 4 primeiras notas do motivo — o tema completo fica só para os finais
+    sixAM() {
+      const b = getMusicBus();
+      const OPEN = GOOD_NOTES.slice(0, 4);
+      let t = 0;
+      OPEN.forEach((f, i) => {
+        const d = END_GRID[i];
+        tone({ freq: f, dur: d + 0.25, gain: 0.16, delay: t, type: 'triangle', attack: 0.02, bus: b });
+        tone({ freq: f * 2, dur: Math.max(0.2, d), gain: 0.05, delay: t, type: 'sine', bus: b });
+        t += d;
+      });
+    },
+    badEnd() {
+      const b = getMusicBus();
+      const OPEN = BAD_NOTES.slice(0, 4);
+      let t = 0;
+      OPEN.forEach((f, i) => {
+        const d = END_GRID[i];
+        tone({ freq: f, dur: d + 0.25, gain: 0.155, delay: t, type: 'sine', attack: 0.02, bus: b });
+        tone({ freq: f * 2, dur: Math.max(0.2, d), gain: 0.045, delay: t, type: 'sine', bus: b });
+        t += d;
+      });
+    },
+    sixAMFull() { endingTheme(GOOD_NOTES, { type: 'triangle', gain: 0.16, octGain: 0.05, pad: [130.81, 196.0, 261.63] }); },
+    badEndFull() { endingTheme(BAD_NOTES, { type: 'sine', gain: 0.155, octGain: 0.045, pad: [110.0, 164.81, 220.0] }); },
     win() {
       const seq = [392, 523.25, 659.25, 783.99, 1046.5];
       seq.forEach((f, i) => tone({ freq: f, dur: 1.1, gain: 0.15, delay: i * 0.18, type: 'triangle' }));
@@ -556,20 +573,44 @@ const AUDIO = (function () {
   const GOOD_NOTES = [523.25, 659.25, 783.99, 1046.5, 987.77, 783.99, 587.33, 659.25, 783.99, 880.0, 1046.5, 987.77, 880.0, 783.99, 659.25, 523.25];
   // final ruim — mesmo contorno em lá menor, terminando grave e sem resolução feliz
   const BAD_NOTES = [440.0, 523.25, 659.25, 880.0, 830.61, 659.25, 698.46, 659.25, 587.33, 698.46, 659.25, 587.33, 523.25, 493.88, 415.30, 440.0];
+  /* bus de música: controla o volume das melodias dos finais e pode ser cortado ao sair das telas */
+  let musicBus = null;
+  function getMusicBus() {
+    if (!ok()) return null;
+    if (!musicBus) {
+      musicBus = ac.createGain();
+      musicBus.gain.value = 1;
+      musicBus.connect(master);
+    }
+    return musicBus;
+  }
+  function stopMusic() {
+    if (!musicBus || !ac) return;
+    const b = musicBus;
+    musicBus = null;
+    try {
+      b.gain.cancelScheduledValues(ac.currentTime);
+      b.gain.setValueAtTime(b.gain.value, ac.currentTime);
+      b.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + 0.25);
+    } catch (e) { /* ignore */ }
+    setTimeout(() => { try { b.disconnect(); } catch (e) { /* ignore */ } }, 400);
+  }
   function endingTheme(notes, opt) {
     killNode(fan); killNode(amb); fan = null; amb = null;
     if (!ok()) return;
+    const bus = getMusicBus();
+    if (!bus) return;
     let t = 0;
     notes.forEach((f, i) => {
       const d = END_GRID[i];
-      tone({ freq: f, dur: d + 0.3, gain: opt.gain, delay: t, type: opt.type, attack: 0.02 });
-      tone({ freq: f * 2, dur: Math.max(0.2, d), gain: opt.octGain, delay: t, type: 'sine' });
+      tone({ freq: f, dur: d + 0.3, gain: opt.gain, delay: t, type: opt.type, attack: 0.02, bus });
+      tone({ freq: f * 2, dur: Math.max(0.2, d), gain: opt.octGain, delay: t, type: 'sine', bus });
       t += d;
     });
     const total = t;
     (opt.pad || []).forEach(f => {
-      tone({ freq: f, dur: total + 0.4, gain: 0.055, type: 'sine', attack: 0.4 });
-      tone({ freq: f * 2, dur: Math.max(0.5, total - 0.5), gain: 0.018, delay: 0.4, type: 'sine' });
+      tone({ freq: f, dur: total + 0.4, gain: 0.055, type: 'sine', attack: 0.4, bus });
+      tone({ freq: f * 2, dur: Math.max(0.5, total - 0.5), gain: 0.018, delay: 0.4, type: 'sine', bus });
     });
   }
 
@@ -629,6 +670,7 @@ const AUDIO = (function () {
   function isMuted() { return muted; }
   function stopAll() {
     frozen = false;
+    stopMusic();                              // corta qualquer melodia final que esteja soando
     musicBox(false);
     S.ring(false);
     S.phoneStatic(false);
@@ -737,7 +779,7 @@ const AUDIO = (function () {
 
   return {
     init, unlock, setMuted, isMuted, stopAll, pauseAll, resumeAll,
-    startRoom, stopRoom, musicBox, setListener,
+    startRoom, stopRoom, musicBox, setListener, stopMusic,
     ...S,
     ring: (...a) => S.ring(...a),
     phoneStatic: (...a) => S.phoneStatic(...a),
