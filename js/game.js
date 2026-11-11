@@ -955,10 +955,10 @@ function shuffle(a) {
     d.attenNeed = (S.night | 0) >= 7
       ? 0.9 + Math.random() * 1.6 + (customEffNight(id) - 1) * 0.12   // igual à campanha na "noite" equivalente
       : 0.9 + Math.random() * 1.6 + (S.night - 1) * 0.12;   // cada aparição exige atenção aleatória
-    // porta avisa por som: passos ecoando no corredor (estéreo pela posição da porta em relação a você)
+    // porta avisa por som: passos de bota pesada se aproximando pela soleira (mesmo timbre do caminhar)
     const rel = wrap(ART.ROOM.doors[side].angle - S.yaw);
     const pan = Math.abs(rel) < 0.18 ? 0 : Math.max(-0.85, Math.min(0.85, rel / 1.2));
-    AUDIO.footsteps(pan);
+    [0.55, 0.75, 1.0].forEach((v, i) => setTimeout(() => { if (AUDIO.stepFar) AUDIO.stepFar(pan, v); }, i * 330));
     S.shake = Math.max(S.shake, 6);
     return true;
   }

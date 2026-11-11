@@ -197,20 +197,6 @@ const AUDIO = (function () {
         }, delayMs);
       }
     },
-    footsteps(pan) {
-      // passos pesados ecoando no corredor — chegada do amigo (substitui a batida na porta)
-      if (pan == null || isNaN(pan)) pan = 0;
-      pan = Math.max(-0.9, Math.min(0.9, pan));
-      if (!ok()) return;
-      for (let i = 0; i < 4; i++) {
-        const delayMs = i * 330;
-        setTimeout(() => {
-          const near = i / 3;                           // o passo vai ficando mais perto
-          burst({ dur: 0.2, freq: 145 + near * 65, q: 1.5, gain: 0.36 + near * 0.2, type: 'lowpass', brown: true, delay: 0, pan });
-          tone({ freq: 50 + near * 16, to: 33 + near * 12, dur: 0.24, gain: 0.28 + near * 0.14, delay: 0.01, pan });
-        }, delayMs);
-      }
-    },
     stepFar(pan, vol) {
       // passo rústico de bota pesada no corredor — estalo duro, corpo fundo, madeira do piso
       if (pan == null || isNaN(pan)) pan = 0;
