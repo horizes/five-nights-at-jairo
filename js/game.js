@@ -1451,7 +1451,7 @@ function shuffle(a) {
             d.stepAcc = 0;
             const rel = wrap(ART.ROOM.doors[side].angle - S.yaw);
             const pan = Math.abs(rel) < 0.18 ? 0 : Math.max(-0.85, Math.min(0.85, rel / 1.2));
-            if (AUDIO.stepFar) AUDIO.stepFar(pan, 0.22 + (d.approach || 0) * 0.78);
+            if (AUDIO.stepFar) AUDIO.stepFar(pan, 0.3 + (d.approach || 0) * 0.85);
           }
         } else {
           d.stepAcc = 0;

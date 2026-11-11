@@ -212,23 +212,24 @@ const AUDIO = (function () {
       }
     },
     stepFar(pan, vol) {
-      // um passo de bota pesada no corredor — calcanhar surdo, salto seco, eco baixo corredor a dentro
+      // passo rústico de bota pesada no corredor — estalo duro, corpo fundo, madeira do piso
       if (pan == null || isNaN(pan)) pan = 0;
       pan = Math.max(-0.9, Math.min(0.9, pan));
       if (!ok()) return;
-      const v = vol == null ? 0.4 : Math.max(0.05, Math.min(1, vol));
-      // alterna levemente de lado cada passo — caminhada humana, não metrônomo
-      const side = walkStepAlt ? -0.13 : 0.13;
+      const v = vol == null ? 0.5 : Math.max(0.08, Math.min(1, vol));
+      const side = walkStepAlt ? -0.15 : 0.15;
       walkStepAlt = !walkStepAlt;
       const p = Math.max(-0.95, Math.min(0.95, pan + side));
-      const pitch = 0.92 + Math.random() * 0.16;               // variação natural de tom
-      // calcanhar: grave surdo de couro no concreto
-      burst({ dur: 0.11, freq: 150 * pitch, q: 1.7, gain: 0.42 * v, type: 'lowpass', brown: true, pan: p });
-      // estalo seco do salto no piso
-      burst({ dur: 0.045, freq: 620 * pitch, q: 3.4, gain: 0.30 * v, type: 'bandpass', delay: 0.012, pan: p });
-      tone({ freq: 58 * pitch, to: 40, dur: 0.13, gain: 0.26 * v, pan: p });
-      // eco esmaecido do corredor
-      burst({ dur: 0.3, freq: 210 * pitch, q: 2.0, gain: 0.075 * v, type: 'lowpass', brown: true, delay: 0.17, pan: p });
+      const f = 0.88 + Math.random() * 0.24;
+      // estalo duro do salto contra o piso (presença)
+      burst({ dur: 0.075, freq: 950 * f, q: 2.6, gain: 0.52 * v, type: 'bandpass', pan: p });
+      // batida funda da sola (corpo do passo)
+      burst({ dur: 0.14, freq: 190 * f, q: 1.4, gain: 0.58 * v, type: 'lowpass', brown: true, pan: p });
+      tone({ freq: 64 * f, to: 44, dur: 0.16, gain: 0.42 * v, type: 'triangle', pan: p });
+      // ressonância de madeira do piso (o "tock" rústico)
+      burst({ dur: 0.1, freq: 480 * f, q: 4.6, gain: 0.34 * v, type: 'bandpass', pan: p });
+      // eco curto e arenoso do corredor
+      burst({ dur: 0.3, freq: 240 * f, q: 2.0, gain: 0.13 * v, type: 'lowpass', brown: true, delay: 0.12, pan: p });
     },
     doorCreak() {
       if (!ok()) return;
